@@ -1,0 +1,20 @@
+# dependencies
+/node_modules
+
+# next.js build output
+/.next/
+/out/
+
+# capacitor native projects (generated, not hand-edited — regenerate with `npx cap add android`)
+/android/
+/ios/
+
+# misc
+.DS_Store
+*.pem
+.env*.local
+npm-debug.log*
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts

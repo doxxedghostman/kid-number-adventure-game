@@ -1,0 +1,79 @@
+:root {
+  /* Palette straight from the design brief */
+  --sun-yellow: #ffd93d;
+  --sky-blue: #4fc3f7;
+  --grass-green: #6bcb77;
+  --bubble-pink: #ff6fa5;
+  --grape-purple: #a66cff;
+  --tangerine: #ff9f45;
+  --cream: #fff8e7;
+  --ink: #4a3728;
+
+  --font-display: 'Fredoka', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body {
+  font-family: var(--font-display);
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--sky-blue) 0%, var(--sun-yellow) 100%);
+}
+
+button {
+  font-family: var(--font-display);
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+/* Every tappable thing is big, round, and has a satisfying "squish" on press —
+   nothing in this app should ever require precision tapping from a toddler. */
+.big-button {
+  font-size: 1.5rem;
+  font-weight: 600;
+  padding: 1.1rem 2.2rem;
+  border-radius: 999px;
+  min-height: 72px;
+  min-width: 220px;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+  color: white;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+}
+
+.big-button:active {
+  transform: translateY(6px);
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.15);
+}
+
+.bounce {
+  animation: bounce 2.2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-18px) rotate(2deg); }
+}
+
+.wiggle:hover {
+  animation: wiggle 0.4s ease-in-out;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-4deg); }
+  75% { transform: rotate(4deg); }
+}
