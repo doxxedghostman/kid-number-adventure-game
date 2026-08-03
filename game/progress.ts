@@ -80,3 +80,64 @@ export function completeLevel(levelId: string, coinsEarned: number, starsEarned:
     p.stars += starsEarned;
   });
 }
+
+/**
+ * Backup/restore as a short pasteable code — the zero-backend, zero-account
+ * answer to "what if the kid gets a new phone". A parent taps "Backup",
+ * saves the code somewhere (screenshot, notes app, text to themselves), and
+ * can paste it into "Restore" on any other device. No server, no login, no
+ * child data ever leaves the device unless the parent copies the code out
+ * themselves.
+ *
+ * The code is just the progress JSON, base64-encoded with a short prefix +
+ * checksum so a mistyped/garbled paste fails loudly instead of silently
+ * corrupting the save.
+ */
+const CODE_PREFIX = 'KNA1-';
+
+function checksum(str: string): string {
+  // Simple non-cryptographic checksum — just enough to catch a mis-typed
+  // or truncated paste, not a security measure.
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
+  }
+  return hash.toString(36);
+}
+
+export function exportProgressCode(): string {
+  const json = JSON.stringify(getProgress());
+  const body = typeof window === 'undefined' ? '' : window.btoa(unescape(encodeURIComponent(json)));
+  return `${CODE_PREFIX}${body}.${checksum(body)}`;
+}
+
+export type ImportResult = { ok: true } | { ok: false; error: string };
+
+export function importProgressCode(rawCode: string): ImportResult {
+  const code = rawCode.trim();
+  if (!code.startsWith(CODE_PREFIX)) {
+    return { ok: false, error: "That doesn't look like a backup code." };
+  }
+
+  const withoutPrefix = code.slice(CODE_PREFIX.length);
+  const lastDot = withoutPrefix.lastIndexOf('.');
+  if (lastDot === -1) {
+    return { ok: false, error: 'That code looks incomplete.' };
+  }
+
+  const body = withoutPrefix.slice(0, lastDot);
+  const providedChecksum = withoutPrefix.slice(lastDot + 1);
+
+  if (checksum(body) !== providedChecksum) {
+    return { ok: false, error: "That code looks mistyped — double-check it and try again." };
+  }
+
+  try {
+    const json = decodeURIComponent(escape(window.atob(body)));
+    const parsed = JSON.parse(json);
+    saveProgress({ ...defaultProgress(), ...parsed });
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "That code couldn't be read — double-check it and try again." };
+  }
+}
