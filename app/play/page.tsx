@@ -24,14 +24,20 @@ export default function PlayPage() {
     };
   }, []);
 
+  // Plain block, no flex here on purpose: Phaser's own `autoCenter: CENTER_BOTH`
+  // centers the canvas by writing margin styles onto it directly. Adding
+  // flexbox centering on this parent as well double-applies the centering
+  // (flex + Phaser's margin math stack) and shoves the canvas off-center —
+  // worse the more the design aspect ratio (portrait 720x1280) differs from
+  // the window's. Let Phaser own centering entirely; this div just needs to
+  // be a full-bleed, statically-positioned box for it to measure against.
   return (
     <div
       style={{
+        position: 'fixed',
+        inset: 0,
         width: '100dvw',
         height: '100dvh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
         background: '#4fc3f7',
         overflow: 'hidden',
       }}

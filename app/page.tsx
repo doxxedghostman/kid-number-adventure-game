@@ -45,21 +45,26 @@ export default function HomePage() {
           Dino&apos;s Number Adventure
         </h1>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.6rem' }}>
-          <Button color="green" onClick={() => router.push('/play')}>
-            ▶️ PLAY
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '1rem',
+            marginTop: '0.6rem',
+            width: 'min(340px, 80vw)',
+          }}
+        >
+          <Button variant="square" color="green" icon="▶️" onClick={() => router.push('/play')}>
+            PLAY
           </Button>
-          <Button color="orange" onClick={() => router.push('/play?daily=1')}>
-            🎁 Daily Reward
+          <Button variant="square" color="orange" icon="🎁" onClick={() => router.push('/play?daily=1')}>
+            Daily Reward
           </Button>
-          <Button color="purple" onClick={() => router.push('/achievements')}>
-            🏆 Achievements
+          <Button variant="square" color="purple" icon="🏆" onClick={() => router.push('/achievements')}>
+            Achievements
           </Button>
-          <Button color="pink" onClick={() => router.push('/settings')}>
-            ⚙️ Settings
-          </Button>
-          <Button color="blue" onClick={() => router.push('/parent')}>
-            👪 Parents
+          <Button variant="square" color="pink" icon="⚙️" onClick={() => router.push('/settings')}>
+            Settings
           </Button>
         </div>
       </div>
