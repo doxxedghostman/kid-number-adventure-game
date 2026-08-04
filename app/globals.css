@@ -77,3 +77,58 @@ button {
   25% { transform: rotate(-4deg); }
   75% { transform: rotate(4deg); }
 }
+
+/* Menu background cloud drift — three speeds for a cheap parallax feel */
+.cloud-drift-slow { animation: drift-wide 26s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.cloud-drift-mid { animation: drift-wide 19s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.cloud-drift-fast { animation: drift-wide 14s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+
+@keyframes drift-wide {
+  0%, 100% { transform: translateX(-14px); }
+  50% { transform: translateX(14px); }
+}
+
+.twinkle-a, .twinkle-b, .twinkle-c {
+  animation: twinkle 2.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.twinkle-b { animation-delay: 0.8s; }
+.twinkle-c { animation-delay: 1.5s; }
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+.menu-hero-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 260px;
+  height: 260px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(255, 248, 231, 0.85) 0%, rgba(255, 248, 231, 0) 70%);
+  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.menu-title-badge {
+  background: rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 28px;
+  padding: 0.5rem 1.4rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cloud-drift-slow,
+  .cloud-drift-mid,
+  .cloud-drift-fast,
+  .twinkle-a,
+  .twinkle-b,
+  .twinkle-c {
+    animation: none !important;
+  }
+}
