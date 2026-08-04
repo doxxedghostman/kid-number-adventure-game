@@ -162,3 +162,31 @@ button {
     animation: none !important;
   }
 }
+
+/* ---------- Responsive tuning for pill buttons (settings/achievements/parent pages) ---------- */
+:root {
+  --btn-font: clamp(16px, 2.4vw, 22px);
+  --btn-height: clamp(48px, 6vh, 84px);
+}
+
+.big-button {
+  font-size: var(--btn-font);
+  font-weight: 600;
+  padding: clamp(0.56rem, 1.6vw, 1.1rem) clamp(0.9rem, 3vw, 2.2rem);
+  border-radius: 999px;
+  min-height: var(--btn-height);
+  width: 100%;
+  max-width: 340px;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+  color: white;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+}
+
+/* Ensure image badges / mascots inside the header scale */
+.menu-hero-glow,
+.menu-hero-glow + img,
+.bounce {
+  max-width: 100%;
+  height: auto;
+}

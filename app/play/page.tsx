@@ -31,6 +31,10 @@ export default function PlayPage() {
   // worse the more the design aspect ratio (portrait 720x1280) differs from
   // the window's. Let Phaser own centering entirely; this div just needs to
   // be a full-bleed, statically-positioned box for it to measure against.
+  //
+  // This route renders ONLY the Phaser canvas — it is not a place for
+  // duplicate HTML menu buttons. The actual world/mini-game menu lives
+  // inside WorldMapScene (a Phaser scene), not in this React component.
   return (
     <div
       style={{

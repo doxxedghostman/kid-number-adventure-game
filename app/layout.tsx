@@ -1,9 +1,17 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Kid Number Adventure',
   description: 'Learn numbers 1-10 with Dino!',
+};
+
+// Using Next's dedicated `viewport` export rather than a manual <meta> tag —
+// Next.js App Router already auto-injects a viewport meta tag, so a manual
+// one in <head> below would just create a duplicate.
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({
