@@ -132,3 +132,89 @@ button {
     animation: none !important;
   }
 }
+
+/* ---------- Responsive layout additions ---------- */
+/* Tunable variables */
+:root{
+  --container-max: 520px;               /* max width for centered menu */
+  --btn-gap: 1rem;
+  --btn-font: clamp(16px, 2.4vw, 22px);
+  --btn-height: clamp(48px, 6vh, 84px);
+  --btn-radius: 12px;
+}
+
+/* Root play page container (replaces inline fixed styles) */
+.play-root{
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center; /* centers main content */
+  align-items: flex-start; /* let header sit toward top */
+  padding: 2rem 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Centered app container that holds the menu content */
+.app-container{
+  width: min(92%, var(--container-max));
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  align-items: stretch;
+  box-sizing: border-box;
+}
+
+/* Header/title adjustments */
+.world-header{
+  text-align: center;
+  margin-bottom: 0.6rem;
+}
+
+/* Stacked menu layout */
+.world-menu{
+  display: flex;
+  flex-direction: column;
+  gap: var(--btn-gap);
+  align-items: stretch;
+}
+
+/* Make the existing tappable "big-button" responsive and full-width within the container */
+.big-button{
+  font-size: var(--btn-font);
+  font-weight: 600;
+  padding: clamp(0.56rem, 1.6vw, 1.1rem) clamp(0.9rem, 3vw, 2.2rem);
+  border-radius: 999px;
+  min-height: var(--btn-height);
+  width: 100%;
+  max-width: 100%;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+  color: white;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+}
+
+/* Ensure image badges / mascots inside the header scale */
+.menu-hero-glow,
+.menu-hero-glow + img,
+.bounce {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Tiny screens */
+@media (max-width: 360px){
+  :root{ --btn-gap: 0.6rem; }
+  .app-container{ padding: 0.6rem; }
+  .world-header{ margin-bottom: 0.4rem; }
+}
+
+/* Very wide screens: keep the menu visually compact */
+@media (min-width: 1200px){
+  .app-container{
+    width: min(45%, var(--container-max));
+  }
+}
