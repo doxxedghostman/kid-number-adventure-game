@@ -1,7 +1,6 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import DinoMascot from '@/components/DinoMascot';
 import Button from '@/components/Button';
 import CoinCounter from '@/components/CoinCounter';
 import BannerAd from '@/components/BannerAd';
@@ -24,7 +23,8 @@ export default function HomePage() {
     >
       <CoinCounter />
 
-      <DinoMascot size={160} className="bounce" />
+      {/* eslint-disable-next-line @next/next/no-img-element -- static export + unoptimized images, plain <img> is fine here */}
+      <img src="/assets/sprites/dino-wave.png" alt="Dino waving hello" className="bounce" style={{ height: 180, width: 'auto' }} />
 
       <h1 style={{ fontSize: '2.2rem', margin: 0, color: 'white', textShadow: '0 3px 0 rgba(0,0,0,0.15)' }}>
         Dino&apos;s Number Adventure

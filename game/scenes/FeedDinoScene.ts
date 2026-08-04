@@ -15,6 +15,7 @@ export default class FeedDinoScene extends Phaser.Scene {
   private basketText!: Phaser.GameObjects.Text;
   private apples: Phaser.GameObjects.Text[] = [];
   private busy = false;
+  private dinoImage!: Phaser.GameObjects.Image;
 
   constructor() {
     super('FeedDino');
@@ -26,7 +27,10 @@ export default class FeedDinoScene extends Phaser.Scene {
     this.hud = createHud(this, '', () => this.scene.start('WorldMap'));
 
     // Dino + basket, fixed at the bottom of the screen.
-    this.add.text(GAME_WIDTH / 2 - 60, GAME_HEIGHT - 220, '🦕', { fontSize: '140px' }).setOrigin(0.5);
+    this.dinoImage = this.add
+      .image(GAME_WIDTH / 2 - 60, GAME_HEIGHT - 220, 'dino-idle')
+      .setScale(0.32)
+      .setOrigin(0.5);
     this.add
       .rectangle(GAME_WIDTH / 2 + 140, GAME_HEIGHT - 180, 200, 120, COLORS.tangerine)
       .setStrokeStyle(4, 0xffffff, 0.6);
@@ -89,11 +93,15 @@ export default class FeedDinoScene extends Phaser.Scene {
         this.basketText.setText(String(this.basketCount));
         if (this.basketCount === this.target) {
           this.busy = true;
+          this.dinoImage.setTexture('dino-happy');
           celebrate(this, GAME_WIDTH / 2 + 140, GAME_HEIGHT - 180);
           flyCoins(this, GAME_WIDTH / 2 + 140, GAME_HEIGHT - 180, COINS_PER_CORRECT);
           // Remaining decoy apples fade — the round is already won.
           this.apples.forEach((a) => a.active && this.tweens.add({ targets: a, alpha: 0, duration: 300 }));
-          this.time.delayedCall(700, () => this.nextRound());
+          this.time.delayedCall(700, () => {
+            this.dinoImage.setTexture('dino-idle');
+            this.nextRound();
+          });
         }
       },
     });

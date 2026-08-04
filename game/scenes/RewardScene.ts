@@ -17,8 +17,10 @@ export default class RewardScene extends Phaser.Scene {
   create(data: RewardData) {
     this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, COLORS.grapePurple).setOrigin(0);
 
+    this.add.image(GAME_WIDTH / 2, 190, 'dino-happy').setScale(0.34).setOrigin(0.5);
+
     this.add
-      .text(GAME_WIDTH / 2, 260, 'Great job!', {
+      .text(GAME_WIDTH / 2, 340, 'Great job!', {
         fontFamily: 'Arial, sans-serif',
         fontSize: '64px',
         fontStyle: 'bold',

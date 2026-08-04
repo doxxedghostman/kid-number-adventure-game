@@ -6,13 +6,14 @@ export default class BootScene extends Phaser.Scene {
   }
 
   preload() {
-    // Nothing to load yet — every scene currently draws its own shapes/text
-    // via Phaser.Graphics so the game is fully playable with zero art assets.
-    //
-    // Once real assets are in (see README "Free art & sound" section for
-    // where to get them), load them here, e.g.:
-    //   this.load.atlas('dino', 'assets/sprites/dino.png', 'assets/sprites/dino.json');
-    //   this.load.audio('pop', 'assets/audio/pop.mp3');
+    // Real Dino sprites (AI-generated, background-stripped — see
+    // public/assets/sprites/). Everything else still draws with
+    // Phaser.Graphics/emoji until more assets come in — see README
+    // "Free art & sound" for where to source them.
+    this.load.image('dino-idle', 'assets/sprites/dino-idle.png');
+    this.load.image('dino-wave', 'assets/sprites/dino-wave.png');
+    this.load.image('dino-happy', 'assets/sprites/dino-happy.png');
+    this.load.image('dino-sad', 'assets/sprites/dino-sad.png');
   }
 
   create() {
