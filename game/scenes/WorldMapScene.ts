@@ -27,85 +27,252 @@ export default class WorldMapScene extends Phaser.Scene {
   }
 
   create() {
-    this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, COLORS.skyBlue).setOrigin(0);
-
-    // Ground band to suggest "Grassland" without needing a background image yet.
-    this.add.rectangle(0, GAME_HEIGHT - 200, GAME_WIDTH, 200, COLORS.grassGreen).setOrigin(0);
-
-    this.add
-      .text(GAME_WIDTH / 2, 120, 'World 1: Grassland', {
-        fontFamily: 'Arial, sans-serif',
-        fontSize: '48px',
-        fontStyle: 'bold',
-        color: '#ffffff',
-      })
-      .setOrigin(0.5);
+    this.drawBackground();
+    this.drawHeader();
 
     const progress = getProgress();
-    this.add
-      .text(GAME_WIDTH / 2, 180, `⭐ ${progress.stars}   🪙 ${progress.coins}`, {
-        fontFamily: 'Arial, sans-serif',
-        fontSize: '32px',
-        color: '#ffffff',
-      })
-      .setOrigin(0.5);
 
-    const startY = 320;
-    const gap = 200;
+    // 2x2 grid for the 4 games — replaces the old single-file vertical
+    // stack so everything fits above the fold and reads as a deliberate
+    // menu rather than a scrolling list.
+    const tileW = 300;
+    const tileH = 250;
+    const colGap = 30;
+    const rowGap = 30;
+    const col1X = GAME_WIDTH / 2 - tileW / 2 - colGap / 2;
+    const col2X = GAME_WIDTH / 2 + tileW / 2 + colGap / 2;
+    const row1Y = 400;
+    const row2Y = row1Y + tileH + rowGap;
+
+    const positions = [
+      { x: col1X, y: row1Y },
+      { x: col2X, y: row1Y },
+      { x: col1X, y: row2Y },
+      { x: col2X, y: row2Y },
+    ];
+
     MVP_GAMES.forEach((game, i) => {
-      this.createGameTile(game, GAME_WIDTH / 2, startY + i * gap, progress.completedLevels);
+      this.createGameTile(game, positions[i].x, positions[i].y, tileW, tileH, progress.completedLevels, i);
     });
 
-    this.createChallengeTile(GAME_WIDTH / 2, startY + MVP_GAMES.length * gap);
+    this.createChallengeTile(GAME_WIDTH / 2, row2Y + tileH / 2 + rowGap + 95);
+  }
 
-    // Exit back to the Next.js home menu.
-    const backBtn = this.add.circle(60, 60, 44, 0xffffff, 0.9).setInteractive({ useHandCursor: true });
-    this.add.text(60, 60, '🏠', { fontSize: '36px' }).setOrigin(0.5);
-    backBtn.on('pointerdown', () => {
-      window.location.href = '/';
+  private drawBackground() {
+    // Sky gradient instead of a flat fill.
+    const sky = this.add.graphics();
+    sky.fillGradientStyle(0x6fd0ff, 0x6fd0ff, COLORS.skyBlue, COLORS.skyBlue, 1);
+    sky.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    // Sun glow, top-left corner (kept clear of the coin/back HUD on the right/left).
+    const sunX = 110;
+    const sunY = 130;
+    this.add.circle(sunX, sunY, 110, COLORS.sunYellow, 0.2);
+    this.add.circle(sunX, sunY, 70, COLORS.sunYellow, 0.4);
+    this.add.circle(sunX, sunY, 46, COLORS.sunYellow, 1);
+
+    // Drifting clouds — cheap parallax feel via looping tweens, no image assets.
+    this.makeCloud(520, 170, 1);
+    this.makeCloud(300, 260, 0.7);
+    this.makeCloud(600, 320, 0.55);
+
+    // Rolling hills toward the bottom, two tones like the home menu backdrop.
+    this.add.ellipse(GAME_WIDTH * 0.3, GAME_HEIGHT + 60, GAME_WIDTH * 1.3, 420, 0x8fdba0);
+    this.add.ellipse(GAME_WIDTH * 0.75, GAME_HEIGHT + 120, GAME_WIDTH * 1.1, 460, COLORS.grassGreen);
+
+    // A few candy-flower dots along the hill edge for texture.
+    const flowerSpots: { x: number; y: number; c: number }[] = [
+      { x: 90, y: GAME_HEIGHT - 210, c: COLORS.bubblePink },
+      { x: 150, y: GAME_HEIGHT - 230, c: COLORS.sunYellow },
+      { x: GAME_WIDTH - 130, y: GAME_HEIGHT - 220, c: COLORS.grapePurple },
+      { x: GAME_WIDTH - 70, y: GAME_HEIGHT - 195, c: COLORS.tangerine },
+    ];
+    flowerSpots.forEach((f) => this.makeFlower(f.x, f.y, f.c));
+  }
+
+  private makeCloud(x: number, y: number, speed: number) {
+    const group = this.add.container(x, y, [
+      this.add.ellipse(0, 0, 90, 46, 0xffffff, 0.9),
+      this.add.ellipse(30, -10, 60, 38, 0xffffff, 0.9),
+      this.add.ellipse(-30, -6, 50, 34, 0xffffff, 0.9),
+    ]);
+    this.tweens.add({
+      targets: group,
+      x: x + 26,
+      duration: 4000 / speed,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.InOut',
     });
   }
 
-  private createGameTile(game: GameTile, x: number, y: number, completed: string[]) {
-    const isDone = completed.some((id) => id.includes(game.key.toLowerCase()));
+  private makeFlower(x: number, y: number, color: number) {
+    const petals = [
+      [0, 0],
+      [-7, 0],
+      [7, 0],
+      [0, -7],
+      [0, 7],
+    ];
+    petals.forEach(([dx, dy]) => this.add.circle(x + dx, y + dy, 4, color, dx === 0 && dy === 0 ? 1 : 0.8));
+    this.add.circle(x, y, 2.5, COLORS.cream);
+  }
 
-    const tile = this.add
-      .rectangle(x, y, 560, 170, game.color)
-      .setStrokeStyle(6, 0xffffff, 0.6)
-      .setInteractive({ useHandCursor: true });
-
-    this.add.text(x - 220, y, game.emoji, { fontSize: '72px' }).setOrigin(0.5);
-    this.add
-      .text(x + 20, y, game.label, {
+  private drawHeader() {
+    // Title with a soft frosted badge behind it, matching the home menu's title treatment.
+    const title = this.add
+      .text(GAME_WIDTH / 2, 150, 'World 1: Grassland', {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '36px',
+        fontSize: '46px',
         fontStyle: 'bold',
         color: '#ffffff',
       })
+      .setOrigin(0.5)
+      .setShadow(0, 3, 'rgba(0,0,0,0.25)', 4);
+
+    const badge = this.add
+      .rectangle(GAME_WIDTH / 2, 150, title.width + 60, 74, 0xffffff, 0.22)
+      .setStrokeStyle(2, 0xffffff, 0.3);
+    this.children.moveBelow(badge, title);
+
+    const progress = getProgress();
+    this.add.rectangle(GAME_WIDTH / 2, 225, 220, 56, 0xffffff, 0.95).setStrokeStyle(3, COLORS.ink, 0.08);
+    this.add
+      .text(GAME_WIDTH / 2, 225, `⭐ ${progress.stars}   🪙 ${progress.coins}`, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '28px',
+        fontStyle: 'bold',
+        color: '#4a3728',
+      })
       .setOrigin(0.5);
 
+    // Exit back to the Next.js home menu — same 3D-shadow treatment as the game tiles.
+    this.add.circle(60, 64, 44, 0x000000, 0.18);
+    const backBtn = this.add.circle(60, 60, 44, 0xffffff, 0.95).setInteractive({ useHandCursor: true });
+    this.add.text(60, 60, '🏠', { fontSize: '36px' }).setOrigin(0.5);
+    backBtn.on('pointerdown', () => {
+      this.tweens.add({
+        targets: backBtn,
+        scale: 0.9,
+        duration: 80,
+        yoyo: true,
+        onComplete: () => {
+          window.location.href = '/';
+        },
+      });
+    });
+    backBtn.on('pointerover', () => backBtn.setScale(1.06));
+    backBtn.on('pointerout', () => backBtn.setScale(1));
+  }
+
+  /** Rounded "3D" tile: an offset dark rectangle behind a lighter rounded body, like the app's CSS buttons. */
+  private drawTileBody(container: Phaser.GameObjects.Container, w: number, h: number, color: number, radius = 28) {
+    const shadow = this.add.graphics();
+    shadow.fillStyle(0x000000, 0.2);
+    shadow.fillRoundedRect(-w / 2, -h / 2 + 8, w, h, radius);
+
+    const body = this.add.graphics();
+    body.fillStyle(color, 1);
+    body.fillRoundedRect(-w / 2, -h / 2, w, h, radius);
+    body.lineStyle(4, 0xffffff, 0.55);
+    body.strokeRoundedRect(-w / 2, -h / 2, w, h, radius);
+
+    container.add([shadow, body]);
+    return { shadow, body };
+  }
+
+  private createGameTile(
+    game: GameTile,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    completed: string[],
+    index: number
+  ) {
+    const isDone = completed.some((id) => id.includes(game.key.toLowerCase()));
+
+    const container = this.add.container(x, y);
+    const { shadow, body } = this.drawTileBody(container, w, h, game.color);
+
+    const iconBadge = this.add.circle(0, -34, 52, 0xffffff, 0.25);
+    const icon = this.add.text(0, -34, game.emoji, { fontSize: '56px' }).setOrigin(0.5);
+    const label = this.add
+      .text(0, 58, game.label, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '26px',
+        fontStyle: 'bold',
+        color: '#ffffff',
+        align: 'center',
+        wordWrap: { width: w - 40 },
+      })
+      .setOrigin(0.5)
+      .setShadow(0, 2, 'rgba(0,0,0,0.15)', 2);
+
+    container.add([iconBadge, icon, label]);
+
     if (isDone) {
-      this.add.text(x + 240, y - 60, '⭐', { fontSize: '40px' }).setOrigin(0.5);
+      const star = this.add.text(w / 2 - 26, -h / 2 + 20, '⭐', { fontSize: '32px' }).setOrigin(0.5);
+      container.add(star);
     }
 
-    tile.on('pointerdown', () => {
-      tile.setScale(0.97);
-      this.time.delayedCall(80, () => this.scene.start(game.key));
+    // Gentle idle bounce on the icon, staggered per tile so the grid doesn't pulse in unison.
+    this.tweens.add({
+      targets: icon,
+      y: -42,
+      duration: 1400,
+      delay: index * 150,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.InOut',
     });
-    tile.on('pointerover', () => tile.setScale(1.02));
-    tile.on('pointerout', () => tile.setScale(1));
+
+    container.setSize(w, h);
+    container.setInteractive(new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h), Phaser.Geom.Rectangle.Contains);
+
+    container.on('pointerover', () => this.tweens.add({ targets: container, scale: 1.03, duration: 100 }));
+    container.on('pointerout', () => this.tweens.add({ targets: container, scale: 1, duration: 100 }));
+    container.on('pointerdown', () => {
+      // Squish the tile down onto its shadow — same "press" feel as the CSS buttons elsewhere in the app.
+      this.tweens.add({
+        targets: body,
+        y: 6,
+        duration: 70,
+        yoyo: true,
+      });
+      this.tweens.add({
+        targets: [iconBadge, icon, label],
+        y: '+=6',
+        duration: 70,
+        yoyo: true,
+      });
+      shadow.setAlpha(0.5);
+      this.time.delayedCall(140, () => this.scene.start(game.key));
+    });
+
+    // Staggered entrance so the grid feels alive on arrival instead of popping in flat.
+    container.setAlpha(0);
+    container.setScale(0.8);
+    this.tweens.add({
+      targets: container,
+      alpha: 1,
+      scale: 1,
+      duration: 380,
+      delay: index * 90,
+      ease: 'Back.Out',
+    });
   }
 
   /** Entry point into the 10-level story ladder. Uses whatever lives/level progress is already saved. */
   private createChallengeTile(x: number, y: number) {
-    const tile = this.add
-      .rectangle(x, y, 560, 170, COLORS.sunYellow)
-      .setStrokeStyle(6, 0xffffff, 0.8)
-      .setInteractive({ useHandCursor: true });
+    const w = 630;
+    const h = 190;
+    const container = this.add.container(x, y);
+    const { shadow, body } = this.drawTileBody(container, w, h, COLORS.sunYellow, 32);
 
-    this.add.text(x - 220, y, '⚡', { fontSize: '72px' }).setOrigin(0.5);
-    this.add
-      .text(x + 20, y - 22, 'Challenge Mode', {
+    const icon = this.add.text(-220, -8, '⚡', { fontSize: '72px' }).setOrigin(0.5);
+    const label = this.add
+      .text(30, -30, 'Challenge Mode', {
         fontFamily: 'Arial, sans-serif',
         fontSize: '34px',
         fontStyle: 'bold',
@@ -114,17 +281,42 @@ export default class WorldMapScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     const lives = getChallenge().lives;
-    this.add
-      .text(x + 20, y + 30, '❤️'.repeat(lives) + '🖤'.repeat(MAX_LIVES - lives), {
-        fontSize: '28px',
-      })
+    const heartsText = this.add
+      .text(30, 22, '❤️'.repeat(lives) + '🖤'.repeat(MAX_LIVES - lives), { fontSize: '30px' })
       .setOrigin(0.5);
 
-    tile.on('pointerdown', () => {
-      tile.setScale(0.97);
-      this.time.delayedCall(80, () => this.scene.start('ChallengeHub'));
+    container.add([icon, label, heartsText]);
+
+    // Small pulsing glow ring to draw the eye to the featured mode.
+    const glow = this.add.circle(-220, -8, 60, 0xffffff, 0.35);
+    container.addAt(glow, 2);
+    this.tweens.add({ targets: glow, scale: 1.25, alpha: 0, duration: 1400, repeat: -1, ease: 'Sine.Out' });
+
+    container.setSize(w, h);
+    container.setInteractive(new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h), Phaser.Geom.Rectangle.Contains);
+
+    container.on('pointerover', () => this.tweens.add({ targets: container, scale: 1.02, duration: 100 }));
+    container.on('pointerout', () => this.tweens.add({ targets: container, scale: 1, duration: 100 }));
+    container.on('pointerdown', () => {
+      this.tweens.add({
+        targets: body,
+        y: 6,
+        duration: 70,
+        yoyo: true,
+      });
+      shadow.setAlpha(0.5);
+      this.time.delayedCall(140, () => this.scene.start('ChallengeHub'));
     });
-    tile.on('pointerover', () => tile.setScale(1.02));
-    tile.on('pointerout', () => tile.setScale(1));
+
+    container.setAlpha(0);
+    container.setScale(0.85);
+    this.tweens.add({
+      targets: container,
+      alpha: 1,
+      scale: 1,
+      duration: 400,
+      delay: MVP_GAMES.length * 90,
+      ease: 'Back.Out',
+    });
   }
 }

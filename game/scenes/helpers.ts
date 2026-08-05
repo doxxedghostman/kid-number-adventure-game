@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS, PALETTE_CYCLE } from '../theme';
 import { GAME_WIDTH } from '../config';
+import { getProgress, addCoins as persistCoins } from '../progress';
 
 /**
  * Draws a big rounded "tile" with a number on it — used anywhere the game
@@ -53,25 +54,42 @@ export function celebrate(scene: Phaser.Scene, x: number, y: number) {
   }
 }
 
-/** Coins flying from a point up to the HUD coin counter (top-right of screen). */
-export function flyCoins(scene: Phaser.Scene, x: number, y: number, count: number) {
+/**
+ * Coins flying from a point up to the HUD coin counter (top-right of screen).
+ * `onLanded` fires once, when the last coin arrives — mini-game scenes use
+ * this to credit + animate the live coin badge created by `createHud`, so
+ * kids actually see their total go up as they earn it instead of coins
+ * vanishing into a corner with nothing tracking them.
+ */
+export function flyCoins(scene: Phaser.Scene, x: number, y: number, count: number, onLanded?: () => void) {
   const coinsToShow = Math.min(count, 8);
   for (let i = 0; i < coinsToShow; i++) {
     const coin = scene.add.circle(x, y, 16, COLORS.sunYellow).setStrokeStyle(3, COLORS.tangerine);
+    const isLast = i === coinsToShow - 1;
     scene.tweens.add({
       targets: coin,
-      x: GAME_WIDTH - 60,
+      x: GAME_WIDTH - 90,
       y: 60,
       scale: 0.4,
       delay: i * 60,
       duration: 500,
       ease: 'Cubic.In',
-      onComplete: () => coin.destroy(),
+      onComplete: () => {
+        coin.destroy();
+        if (isLast) onLanded?.();
+      },
     });
   }
 }
 
-/** Standard top HUD: a back-to-map button + an instruction banner. Every mini-game scene uses this. */
+/**
+ * Standard top HUD: a back-to-map button + an instruction banner + a live
+ * coin badge. Every mini-game scene uses this. The coin badge is the thing
+ * kids are missing feedback on during play — it starts at their real saved
+ * balance and ticks up (with a little pop) every time `addCoins` is called,
+ * so earning coins is visible in the moment instead of only at the Reward
+ * screen after the whole level is done.
+ */
 export function createHud(scene: Phaser.Scene, instructions: string, onBack: () => void) {
   const backBtn = scene.add.circle(60, 60, 44, COLORS.white, 0.9).setInteractive({ useHandCursor: true });
   scene.add
@@ -79,22 +97,48 @@ export function createHud(scene: Phaser.Scene, instructions: string, onBack: () 
     .setOrigin(0.5);
   backBtn.on('pointerdown', onBack);
 
+  // Coin badge, top-right — same spot flyCoins() animates coins toward.
+  const coinPill = scene.add
+    .rectangle(GAME_WIDTH - 90, 60, 150, 68, COLORS.white, 0.95)
+    .setStrokeStyle(3, COLORS.ink, 0.1);
+  coinPill.setSize(150, 68);
+  const coinLabel = scene.add
+    .text(GAME_WIDTH - 90, 60, `🪙 ${getProgress().coins}`, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '28px',
+      fontStyle: 'bold',
+      color: '#4a3728',
+    })
+    .setOrigin(0.5);
+
   const banner = scene.add
-    .rectangle(GAME_WIDTH / 2, 60, GAME_WIDTH - 200, 76, COLORS.white, 0.9)
+    .rectangle(GAME_WIDTH / 2, 60, 360, 76, COLORS.white, 0.9)
     .setStrokeStyle(4, COLORS.ink, 0.1);
   const text = scene.add
     .text(GAME_WIDTH / 2, 60, instructions, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '30px',
+      fontSize: '28px',
       fontStyle: 'bold',
       color: '#4a3728',
       align: 'center',
-      wordWrap: { width: GAME_WIDTH - 240 },
+      wordWrap: { width: 320 },
     })
     .setOrigin(0.5);
 
   return {
     setInstructions: (newText: string) => text.setText(newText),
+    /** Persist coins earned AND bump the visible badge with a little pop. */
+    addCoins: (amount: number) => {
+      persistCoins(amount);
+      coinLabel.setText(`🪙 ${getProgress().coins}`);
+      scene.tweens.add({
+        targets: [coinPill, coinLabel],
+        scale: 1.25,
+        duration: 120,
+        yoyo: true,
+        ease: 'Quad.Out',
+      });
+    },
   };
 }
 

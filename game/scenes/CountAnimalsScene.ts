@@ -93,7 +93,8 @@ export default class CountAnimalsScene extends Phaser.Scene {
       this.busy = true;
       this.roundTimer?.destroy();
       celebrate(this, tile.x, tile.y);
-      flyCoins(this, tile.x, tile.y, this.challenge?.coinsPerCorrect ?? COINS_PER_CORRECT);
+      const earned = this.challenge?.coinsPerCorrect ?? COINS_PER_CORRECT;
+      flyCoins(this, tile.x, tile.y, earned, () => this.hud.addCoins(earned));
       this.time.delayedCall(600, () => this.nextRound());
     } else {
       this.tweens.add({ targets: tile, scale: 0.9, duration: 100, yoyo: true });
@@ -137,14 +138,16 @@ export default class CountAnimalsScene extends Phaser.Scene {
 
   private finishLevel() {
     const roundCount = this.challenge?.roundCount ?? ROUNDS_PER_LEVEL;
+    // Coins already credited live via hud.addCoins — pass 0 here so
+    // completeLevel only records stars/completion, not coins again.
     const coinsEarned = roundCount * (this.challenge?.coinsPerCorrect ?? COINS_PER_CORRECT);
     const starsEarned = 3;
     if (this.challenge) {
-      completeLevel(this.challenge.levelId, coinsEarned, starsEarned);
+      completeLevel(this.challenge.levelId, 0, starsEarned);
       advanceLevel();
       this.scene.start('Reward', { coinsEarned, starsEarned, nextScene: 'ChallengeHub' });
     } else {
-      completeLevel('world1-count-animals', coinsEarned, starsEarned);
+      completeLevel('world1-count-animals', 0, starsEarned);
       this.scene.start('Reward', { coinsEarned, starsEarned, nextScene: 'WorldMap' });
     }
   }

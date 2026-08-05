@@ -137,7 +137,8 @@ export default class BalloonPopScene extends Phaser.Scene {
       this.busy = true;
       this.roundTimer?.destroy();
       celebrate(this, x, y);
-      flyCoins(this, x, y, this.challenge?.coinsPerCorrect ?? COINS_PER_CORRECT);
+      const earned = this.challenge?.coinsPerCorrect ?? COINS_PER_CORRECT;
+      flyCoins(this, x, y, earned, () => this.hud.addCoins(earned));
       body.destroy();
       label.destroy();
       string.destroy();
@@ -183,14 +184,17 @@ export default class BalloonPopScene extends Phaser.Scene {
 
   private finishLevel() {
     const roundCount = this.challenge?.roundCount ?? ROUNDS_PER_LEVEL;
+    // Coins were already credited live (per correct answer) via hud.addCoins,
+    // so completeLevel() here only records stars/completion — passing 0 for
+    // coins avoids double-crediting the same coins twice.
     const coinsEarned = roundCount * (this.challenge?.coinsPerCorrect ?? COINS_PER_CORRECT);
     const starsEarned = 3; // TODO: scale by mistakes made, once mistake-tracking is added
     if (this.challenge) {
-      completeLevel(this.challenge.levelId, coinsEarned, starsEarned);
+      completeLevel(this.challenge.levelId, 0, starsEarned);
       advanceLevel();
       this.scene.start('Reward', { coinsEarned, starsEarned, nextScene: 'ChallengeHub' });
     } else {
-      completeLevel('world1-balloon-pop', coinsEarned, starsEarned);
+      completeLevel('world1-balloon-pop', 0, starsEarned);
       this.scene.start('Reward', { coinsEarned, starsEarned, nextScene: 'WorldMap' });
     }
   }
