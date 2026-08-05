@@ -1,8 +1,10 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { COLORS } from '../theme';
-import { createHud, createNumberTile, celebrate, flyCoins, randomInt } from './helpers';
+import { createHud, createNumberTile, celebrate, flyCoins, randomInt, createRoundTimer } from './helpers';
 import { completeLevel } from '../progress';
+import { loseLife, advanceLevel } from '../challenge';
+import { ChallengeRunConfig } from '../levels';
 
 const ROUNDS_PER_LEVEL = 5;
 const COINS_PER_CORRECT = 10;
@@ -14,12 +16,16 @@ export default class CountAnimalsScene extends Phaser.Scene {
   private hud!: ReturnType<typeof createHud>;
   private busy = false;
   private roundObjects: Phaser.GameObjects.GameObject[] = [];
+  private challenge?: ChallengeRunConfig;
+  private mistakesThisRound = 0;
+  private roundTimer?: ReturnType<typeof createRoundTimer>;
 
   constructor() {
     super('CountAnimals');
   }
 
-  create() {
+  create(data?: { challenge?: ChallengeRunConfig }) {
+    this.challenge = data?.challenge;
     this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, COLORS.skyBlue).setOrigin(0);
     this.round = 0;
     this.hud = createHud(this, '', () => this.scene.start('WorldMap'));
@@ -28,7 +34,8 @@ export default class CountAnimalsScene extends Phaser.Scene {
 
   private nextRound() {
     this.round += 1;
-    if (this.round > ROUNDS_PER_LEVEL) {
+    const roundCount = this.challenge?.roundCount ?? ROUNDS_PER_LEVEL;
+    if (this.round > roundCount) {
       this.finishLevel();
       return;
     }
@@ -36,6 +43,9 @@ export default class CountAnimalsScene extends Phaser.Scene {
     this.roundObjects.forEach((o) => o.destroy());
     this.roundObjects = [];
     this.busy = false;
+    this.mistakesThisRound = 0;
+    this.roundTimer?.destroy();
+    this.roundTimer = undefined;
 
     const emoji = Phaser.Utils.Array.GetRandom(ANIMAL_EMOJIS);
     this.answer = randomInt(2, 9);
@@ -50,19 +60,66 @@ export default class CountAnimalsScene extends Phaser.Scene {
     }
 
     // Answer row: the correct count plus a few decoys, order shuffled.
+    // Challenge Mode's decoyBoost adds extra options to choose between.
+    const decoyBoost = this.challenge?.decoyBoost ?? 0;
+    const optionCount = 4 + decoyBoost;
     const options = new Set<number>([this.answer]);
-    while (options.size < 4) {
+    while (options.size < optionCount) {
       options.add(randomInt(1, 10));
     }
     const shuffled = Phaser.Utils.Array.Shuffle([...options]);
     const y = GAME_HEIGHT - 260;
-    const spacing = 160;
+    // Spacing shrinks to fit as decoyBoost adds more options, so the row
+    // never runs off the sides of the 720px-wide canvas.
+    const maxSpacing = 160;
+    const spacing = Math.min(maxSpacing, (GAME_WIDTH - 140) / (shuffled.length - 1 || 1));
     const startX = GAME_WIDTH / 2 - (spacing * (shuffled.length - 1)) / 2;
     shuffled.forEach((value, i) => {
-      const tile = createNumberTile(this, startX + i * spacing, y, value, { radius: 65 });
-      tile.setInteractive(new Phaser.Geom.Circle(0, 0, 65), Phaser.Geom.Circle.Contains);
+      const tile = createNumberTile(this, startX + i * spacing, y, value, { radius: Math.min(65, spacing / 2 - 4) });
+      tile.setInteractive(new Phaser.Geom.Circle(0, 0, Math.min(65, spacing / 2 - 4)), Phaser.Geom.Circle.Contains);
       tile.on('pointerdown', () => this.handleAnswer(value, tile));
       this.roundObjects.push(tile);
+    });
+
+    if (this.challenge?.timeLimitSec) {
+      this.roundTimer = createRoundTimer(this, this.challenge.timeLimitSec, () => this.failRound());
+    }
+  }
+
+  private handleAnswer(value: number, tile: Phaser.GameObjects.Container) {
+    if (this.busy) return;
+
+    if (value === this.answer) {
+      this.busy = true;
+      this.roundTimer?.destroy();
+      celebrate(this, tile.x, tile.y);
+      flyCoins(this, tile.x, tile.y, this.challenge?.coinsPerCorrect ?? COINS_PER_CORRECT);
+      this.time.delayedCall(600, () => this.nextRound());
+    } else {
+      this.tweens.add({ targets: tile, scale: 0.9, duration: 100, yoyo: true });
+
+      if (this.challenge) {
+        this.mistakesThisRound += 1;
+        if (this.mistakesThisRound >= this.challenge.maxMistakes) {
+          this.failRound();
+        }
+      }
+    }
+  }
+
+  /** Challenge Mode only: round lost (too many misses, or the timer ran out). */
+  private failRound() {
+    if (this.busy) return;
+    this.busy = true;
+    this.roundTimer?.destroy();
+    this.hud.setInstructions(`The answer was ${this.answer}!`);
+    const state = loseLife();
+    this.time.delayedCall(1100, () => {
+      if (state.lives <= 0) {
+        this.scene.start('ChallengeOver', { resumeScene: 'CountAnimals', resumeData: { challenge: this.challenge } });
+      } else {
+        this.nextRound();
+      }
     });
   }
 
@@ -78,23 +135,17 @@ export default class CountAnimalsScene extends Phaser.Scene {
     return names[emoji] ?? 'animals';
   }
 
-  private handleAnswer(value: number, tile: Phaser.GameObjects.Container) {
-    if (this.busy) return;
-
-    if (value === this.answer) {
-      this.busy = true;
-      celebrate(this, tile.x, tile.y);
-      flyCoins(this, tile.x, tile.y, COINS_PER_CORRECT);
-      this.time.delayedCall(600, () => this.nextRound());
-    } else {
-      this.tweens.add({ targets: tile, scale: 0.9, duration: 100, yoyo: true });
-    }
-  }
-
   private finishLevel() {
-    const coinsEarned = ROUNDS_PER_LEVEL * COINS_PER_CORRECT;
+    const roundCount = this.challenge?.roundCount ?? ROUNDS_PER_LEVEL;
+    const coinsEarned = roundCount * (this.challenge?.coinsPerCorrect ?? COINS_PER_CORRECT);
     const starsEarned = 3;
-    completeLevel('world1-count-animals', coinsEarned, starsEarned);
-    this.scene.start('Reward', { coinsEarned, starsEarned, nextScene: 'WorldMap' });
+    if (this.challenge) {
+      completeLevel(this.challenge.levelId, coinsEarned, starsEarned);
+      advanceLevel();
+      this.scene.start('Reward', { coinsEarned, starsEarned, nextScene: 'ChallengeHub' });
+    } else {
+      completeLevel('world1-count-animals', coinsEarned, starsEarned);
+      this.scene.start('Reward', { coinsEarned, starsEarned, nextScene: 'WorldMap' });
+    }
   }
 }

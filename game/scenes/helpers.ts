@@ -101,3 +101,46 @@ export function createHud(scene: Phaser.Scene, instructions: string, onBack: () 
 export function randomInt(min: number, max: number) {
   return Phaser.Math.Between(min, max);
 }
+
+/**
+ * Small countdown badge for timed Challenge Mode rounds (levels 9-10). Calls
+ * onExpire exactly once. Always call .destroy() when a round ends normally —
+ * otherwise it can still fire after the scene has moved on to the next round.
+ */
+export function createRoundTimer(scene: Phaser.Scene, seconds: number, onExpire: () => void) {
+  let remaining = seconds;
+  let done = false;
+  const text = scene.add
+    .text(GAME_WIDTH - 70, 140, `⏱ ${remaining}`, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '28px',
+      fontStyle: 'bold',
+      color: '#ffffff',
+    })
+    .setOrigin(0.5);
+
+  const event = scene.time.addEvent({
+    delay: 1000,
+    loop: true,
+    callback: () => {
+      if (done) return;
+      remaining -= 1;
+      if (remaining <= 0) {
+        text.setText('⏱ 0');
+        done = true;
+        event.remove();
+        onExpire();
+      } else {
+        text.setText(`⏱ ${remaining}`);
+      }
+    },
+  });
+
+  return {
+    destroy: () => {
+      done = true;
+      event.remove();
+      text.destroy();
+    },
+  };
+}

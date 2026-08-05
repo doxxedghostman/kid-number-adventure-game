@@ -6,6 +6,9 @@ import FeedDinoScene from './scenes/FeedDinoScene';
 import CountAnimalsScene from './scenes/CountAnimalsScene';
 import NumberMatchScene from './scenes/NumberMatchScene';
 import RewardScene from './scenes/RewardScene';
+import StoryScene from './scenes/StoryScene';
+import ChallengeHubScene from './scenes/ChallengeHubScene';
+import ChallengeOverScene from './scenes/ChallengeOverScene';
 
 // Design-resolution canvas; Phaser.Scale.FIT letterboxes/scales it to whatever
 // the phone/browser gives us, so every scene can be built against these fixed
@@ -36,6 +39,9 @@ export function createGameConfig(parent: string | HTMLElement): Phaser.Types.Cor
       CountAnimalsScene,
       NumberMatchScene,
       RewardScene,
+      StoryScene,
+      ChallengeHubScene,
+      ChallengeOverScene,
     ],
   };
 }

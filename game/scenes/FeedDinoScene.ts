@@ -1,8 +1,10 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { COLORS } from '../theme';
-import { createHud, celebrate, flyCoins, randomInt } from './helpers';
+import { createHud, celebrate, flyCoins, randomInt, createRoundTimer } from './helpers';
 import { completeLevel } from '../progress';
+import { loseLife, advanceLevel } from '../challenge';
+import { ChallengeRunConfig } from '../levels';
 
 const ROUNDS_PER_LEVEL = 5;
 const COINS_PER_CORRECT = 10;
@@ -16,12 +18,16 @@ export default class FeedDinoScene extends Phaser.Scene {
   private apples: Phaser.GameObjects.Text[] = [];
   private busy = false;
   private dinoImage!: Phaser.GameObjects.Image;
+  private challenge?: ChallengeRunConfig;
+  private mistakesThisRound = 0;
+  private roundTimer?: ReturnType<typeof createRoundTimer>;
 
   constructor() {
     super('FeedDino');
   }
 
-  create() {
+  create(data?: { challenge?: ChallengeRunConfig }) {
+    this.challenge = data?.challenge;
     this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, COLORS.cream).setOrigin(0);
     this.round = 0;
     this.hud = createHud(this, '', () => this.scene.start('WorldMap'));
@@ -48,7 +54,8 @@ export default class FeedDinoScene extends Phaser.Scene {
 
   private nextRound() {
     this.round += 1;
-    if (this.round > ROUNDS_PER_LEVEL) {
+    const roundCount = this.challenge?.roundCount ?? ROUNDS_PER_LEVEL;
+    if (this.round > roundCount) {
       this.finishLevel();
       return;
     }
@@ -58,11 +65,15 @@ export default class FeedDinoScene extends Phaser.Scene {
     this.basketCount = 0;
     this.basketText.setText('0');
     this.busy = false;
+    this.mistakesThisRound = 0;
+    this.roundTimer?.destroy();
+    this.roundTimer = undefined;
 
     this.target = randomInt(2, 9);
     this.hud.setInstructions(`Dino wants ${this.target} apples!`);
 
-    const decoys = randomInt(2, 4);
+    const decoyBoost = this.challenge?.decoyBoost ?? 0;
+    const decoys = randomInt(2, 4) + decoyBoost;
     const total = this.target + decoys;
     const cols = 4;
     for (let i = 0; i < total; i++) {
@@ -73,6 +84,10 @@ export default class FeedDinoScene extends Phaser.Scene {
       const apple = this.add.text(x, y, '🍎', { fontSize: '80px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
       apple.on('pointerdown', () => this.handleTapApple(apple));
       this.apples.push(apple);
+    }
+
+    if (this.challenge?.timeLimitSec) {
+      this.roundTimer = createRoundTimer(this, this.challenge.timeLimitSec, () => this.failRound());
     }
   }
 
@@ -93,9 +108,10 @@ export default class FeedDinoScene extends Phaser.Scene {
         this.basketText.setText(String(this.basketCount));
         if (this.basketCount === this.target) {
           this.busy = true;
+          this.roundTimer?.destroy();
           this.dinoImage.setTexture('dino-happy');
           celebrate(this, GAME_WIDTH / 2 + 140, GAME_HEIGHT - 180);
-          flyCoins(this, GAME_WIDTH / 2 + 140, GAME_HEIGHT - 180, COINS_PER_CORRECT);
+          flyCoins(this, GAME_WIDTH / 2 + 140, GAME_HEIGHT - 180, this.challenge?.coinsPerCorrect ?? COINS_PER_CORRECT);
           // Remaining decoy apples fade — the round is already won.
           this.apples.forEach((a) => a.active && this.tweens.add({ targets: a, alpha: 0, duration: 300 }));
           this.time.delayedCall(700, () => {
@@ -107,10 +123,32 @@ export default class FeedDinoScene extends Phaser.Scene {
     });
   }
 
+  /** Challenge Mode only: the per-round timer ran out before the basket was filled. */
+  private failRound() {
+    if (this.busy) return;
+    this.busy = true;
+    this.hud.setInstructions(`Dino needed ${this.target} apples!`);
+    const state = loseLife();
+    this.time.delayedCall(1100, () => {
+      if (state.lives <= 0) {
+        this.scene.start('ChallengeOver', { resumeScene: 'FeedDino', resumeData: { challenge: this.challenge } });
+      } else {
+        this.nextRound();
+      }
+    });
+  }
+
   private finishLevel() {
-    const coinsEarned = ROUNDS_PER_LEVEL * COINS_PER_CORRECT;
+    const roundCount = this.challenge?.roundCount ?? ROUNDS_PER_LEVEL;
+    const coinsEarned = roundCount * (this.challenge?.coinsPerCorrect ?? COINS_PER_CORRECT);
     const starsEarned = 3;
-    completeLevel('world1-feed-dino', coinsEarned, starsEarned);
-    this.scene.start('Reward', { coinsEarned, starsEarned, nextScene: 'WorldMap' });
+    if (this.challenge) {
+      completeLevel(this.challenge.levelId, coinsEarned, starsEarned);
+      advanceLevel();
+      this.scene.start('Reward', { coinsEarned, starsEarned, nextScene: 'ChallengeHub' });
+    } else {
+      completeLevel('world1-feed-dino', coinsEarned, starsEarned);
+      this.scene.start('Reward', { coinsEarned, starsEarned, nextScene: 'WorldMap' });
+    }
   }
 }

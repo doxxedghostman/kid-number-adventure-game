@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { COLORS } from '../theme';
 import { getProgress } from '../progress';
+import { getChallenge, MAX_LIVES } from '../challenge';
 
 interface GameTile {
   key: string;
@@ -50,10 +51,12 @@ export default class WorldMapScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     const startY = 320;
-    const gap = 210;
+    const gap = 200;
     MVP_GAMES.forEach((game, i) => {
       this.createGameTile(game, GAME_WIDTH / 2, startY + i * gap, progress.completedLevels);
     });
+
+    this.createChallengeTile(GAME_WIDTH / 2, startY + MVP_GAMES.length * gap);
 
     // Exit back to the Next.js home menu.
     const backBtn = this.add.circle(60, 60, 44, 0xffffff, 0.9).setInteractive({ useHandCursor: true });
@@ -88,6 +91,38 @@ export default class WorldMapScene extends Phaser.Scene {
     tile.on('pointerdown', () => {
       tile.setScale(0.97);
       this.time.delayedCall(80, () => this.scene.start(game.key));
+    });
+    tile.on('pointerover', () => tile.setScale(1.02));
+    tile.on('pointerout', () => tile.setScale(1));
+  }
+
+  /** Entry point into the 10-level story ladder. Uses whatever lives/level progress is already saved. */
+  private createChallengeTile(x: number, y: number) {
+    const tile = this.add
+      .rectangle(x, y, 560, 170, COLORS.sunYellow)
+      .setStrokeStyle(6, 0xffffff, 0.8)
+      .setInteractive({ useHandCursor: true });
+
+    this.add.text(x - 220, y, '⚡', { fontSize: '72px' }).setOrigin(0.5);
+    this.add
+      .text(x + 20, y - 22, 'Challenge Mode', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '34px',
+        fontStyle: 'bold',
+        color: '#4a3728',
+      })
+      .setOrigin(0.5);
+
+    const lives = getChallenge().lives;
+    this.add
+      .text(x + 20, y + 30, '❤️'.repeat(lives) + '🖤'.repeat(MAX_LIVES - lives), {
+        fontSize: '28px',
+      })
+      .setOrigin(0.5);
+
+    tile.on('pointerdown', () => {
+      tile.setScale(0.97);
+      this.time.delayedCall(80, () => this.scene.start('ChallengeHub'));
     });
     tile.on('pointerover', () => tile.setScale(1.02));
     tile.on('pointerout', () => tile.setScale(1));

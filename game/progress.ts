@@ -70,6 +70,22 @@ export function addCoins(amount: number) {
   });
 }
 
+/** Returns false (and spends nothing) if the balance is too low. */
+export function spendCoins(amount: number): boolean {
+  const p = getProgress();
+  if (p.coins < amount) return false;
+  updateProgress((pr) => {
+    pr.coins -= amount;
+  });
+  return true;
+}
+
+export function unlockCharacter(id: string) {
+  updateProgress((p) => {
+    if (!p.unlockedCharacters.includes(id)) p.unlockedCharacters.push(id);
+  });
+}
+
 export function completeLevel(levelId: string, coinsEarned: number, starsEarned: number) {
   updateProgress((p) => {
     if (!p.completedLevels.includes(levelId)) {
