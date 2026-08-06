@@ -11,18 +11,23 @@
     "cap:open": "npx cap open android"
   },
   "dependencies": {
-    "next": "14.2.35",
+    "next": "^15.5.21",
+    "phaser": "^3.80.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "phaser": "^3.80.1"
+    "react-dom": "^18.3.1"
+  },
+  "overrides": {
+    "postcss": "8.5.25",
+    "sharp": "0.35.3",
+    "tar": "7.5.22"
   },
   "devDependencies": {
-    "typescript": "^5.5.4",
+    "@capacitor/android": "^6.1.0",
+    "@capacitor/cli": "^6.1.0",
+    "@capacitor/core": "^6.1.0",
     "@types/node": "^20.14.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "@capacitor/core": "^6.1.0",
-    "@capacitor/cli": "^6.1.0",
-    "@capacitor/android": "^6.1.0"
+    "typescript": "^5.5.4"
   }
 }
