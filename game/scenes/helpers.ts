@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { COLORS, PALETTE_CYCLE } from '../theme';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { getProgress, addCoins as persistCoins, completeLevel } from '../progress';
-import { storyLevelsCompleted, getNewlyUnlockedWorld, WorldDef } from '../worlds';
+import { WORLDS, getNextWorld, isWorldComplete, WorldDef } from '../worlds';
+import { advanceLevel } from '../challenge';
 
 /**
  * Cover-fits a world's full-scene background art (landscape, ~960x536) into
@@ -27,23 +28,28 @@ export function addWorldBackground(scene: Phaser.Scene, worldId: string, dim = t
 }
 
 /**
- * Records a Story Mode level completion and reports back whether it just
- * crossed a world's unlock threshold. Coins are credited live already (see
- * addCoins on the hud returned by createHud), so this only passes stars/
- * completion through to completeLevel — never coins again.
+ * Records a Story Mode level completion within one world and advances that
+ * world's own level counter. Returns the next world's WorldDef if this
+ * level completion just finished the current world (so Reward can show a
+ * "World Unlocked!" celebration), otherwise null. Coins are credited live
+ * already (see addCoins on the hud returned by createHud), so this only
+ * passes stars/completion through to completeLevel — never coins again.
  */
-export function completeStoryLevel(levelId: string, starsEarned: number): WorldDef | null {
-  const before = storyLevelsCompleted(getProgress());
+export function completeStoryLevel(worldId: string, levelId: string, starsEarned: number): WorldDef | null {
   completeLevel(levelId, 0, starsEarned);
-  const after = storyLevelsCompleted(getProgress());
-  return getNewlyUnlockedWorld(before, after);
+  const state = advanceLevel(worldId);
+  const world = WORLDS.find((w) => w.id === worldId);
+  if (world && isWorldComplete(world, state)) {
+    return getNextWorld(worldId);
+  }
+  return null;
 }
 
 /**
  * Rounded "3D" tile body: an offset dark rectangle behind a lighter rounded
  * body, matching the app's CSS button look (border-bottom shadow). Shared by
- * WorldMapScene and WorldSelectScene so every tile-grid screen looks the
- * same and there's one place to tweak the style.
+ * Shared by WorldSelectScene so every tile-grid screen looks the same and
+ * there's one place to tweak the style.
  */
 export function drawTileBody(
   scene: Phaser.Scene,

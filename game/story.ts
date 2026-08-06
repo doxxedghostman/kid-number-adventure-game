@@ -88,13 +88,115 @@ export const STORY_BEATS: Record<string, StoryBeat> = {
     portraitColor: COLORS.grassGreen,
     lines: ['This is it — the whole gang is cheering you on!', "One last count and we're all together again!"],
   },
-  finale: {
+  'grassland-finale': {
     speaker: 'Dino',
     portraitImageKey: 'dino-happy',
     portraitColor: COLORS.sunYellow,
     lines: [
       'You found everyone! Grassland is whole again!',
       "Thank you for helping all of my friends — you're a counting hero!",
+      "There's a whole world beyond these hills — ready to see what's next?",
+    ],
+  },
+
+  'forest-welcome': {
+    speaker: 'Dino',
+    portraitImageKey: 'dino-wave',
+    portraitColor: COLORS.grassGreen,
+    lines: [
+      'Whoa, the trees just keep going! Welcome to the Forest!',
+      'Something in here keeps rustling the leaves — I bet it wants to play a counting game.',
+    ],
+  },
+  'forest-checkpoint': {
+    speaker: 'Dino',
+    portraitImageKey: 'dino-idle',
+    portraitColor: COLORS.grassGreen,
+    lines: ["You're halfway through the Forest already!", 'The path ahead gets a little trickier — I know you can handle it.'],
+  },
+  'forest-finale': {
+    speaker: 'Dino',
+    portraitImageKey: 'dino-happy',
+    portraitColor: COLORS.sunYellow,
+    lines: ['The Forest is all counted up!', 'Onward — I hear waves in the distance...'],
+  },
+
+  'ocean-welcome': {
+    speaker: 'Dino',
+    portraitImageKey: 'dino-wave',
+    portraitColor: COLORS.skyBlue,
+    lines: ['Splash! Welcome to the Ocean!', 'The tide pools are full of things to count — let\'s wade in.'],
+  },
+  'ocean-checkpoint': {
+    speaker: 'Dino',
+    portraitImageKey: 'dino-idle',
+    portraitColor: COLORS.skyBlue,
+    lines: ['Halfway across the Ocean already!', 'Keep your eyes sharp — the current picks up from here.'],
+  },
+  'ocean-finale': {
+    speaker: 'Dino',
+    portraitImageKey: 'dino-happy',
+    portraitColor: COLORS.sunYellow,
+    lines: ["You've counted every wave in the Ocean!", "I think I see stars twinkling up ahead..."],
+  },
+
+  'space-welcome': {
+    speaker: 'Dino',
+    portraitImageKey: 'dino-wave',
+    portraitColor: COLORS.grapePurple,
+    lines: ['3, 2, 1... blast off! Welcome to Space!', 'Numbers float differently up here — let\'s count our way among the stars.'],
+  },
+  'space-checkpoint': {
+    speaker: 'Dino',
+    portraitImageKey: 'dino-idle',
+    portraitColor: COLORS.grapePurple,
+    lines: ["Halfway through Space!", 'The asteroid field ahead needs your quickest counting yet.'],
+  },
+  'space-finale': {
+    speaker: 'Dino',
+    portraitImageKey: 'dino-happy',
+    portraitColor: COLORS.sunYellow,
+    lines: ["You've charted the whole galaxy!", 'Something smells sweet where we\'re headed next...'],
+  },
+
+  'candyland-welcome': {
+    speaker: 'Dino',
+    portraitImageKey: 'dino-wave',
+    portraitColor: COLORS.bubblePink,
+    lines: ['Yum! Welcome to Candyland!', 'Every lollipop and gumdrop here is just begging to be counted.'],
+  },
+  'candyland-checkpoint': {
+    speaker: 'Dino',
+    portraitImageKey: 'dino-idle',
+    portraitColor: COLORS.bubblePink,
+    lines: ['Halfway through Candyland — sweet work!', 'The sugar rush ahead moves fast, so stay focused.'],
+  },
+  'candyland-finale': {
+    speaker: 'Dino',
+    portraitImageKey: 'dino-happy',
+    portraitColor: COLORS.sunYellow,
+    lines: ["You counted every treat in Candyland!", "One last place left — and it's my favorite..."],
+  },
+
+  'dinoisland-welcome': {
+    speaker: 'Dino',
+    portraitImageKey: 'dino-wave',
+    portraitColor: COLORS.tangerine,
+    lines: ["This is it — Dino Island, where I'm from!", "My old dino friends love a good counting game. Let's go say hi!"],
+  },
+  'dinoisland-checkpoint': {
+    speaker: 'Dino',
+    portraitImageKey: 'dino-idle',
+    portraitColor: COLORS.tangerine,
+    lines: ["Halfway across Dino Island!", "This next stretch is the trickiest in the whole game — you've got this."],
+  },
+  'dinoisland-finale': {
+    speaker: 'Dino',
+    portraitImageKey: 'dino-happy',
+    portraitColor: COLORS.sunYellow,
+    lines: [
+      "You did it — every world counted, every friend found!",
+      "Thank you for the adventure. You're the best counting hero there is!",
     ],
   },
 };

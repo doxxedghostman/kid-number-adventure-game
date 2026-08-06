@@ -1,16 +1,16 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { COLORS } from '../theme';
-import { getProgress } from '../progress';
-import { WORLDS, isWorldUnlocked, storyLevelsCompleted } from '../worlds';
+import { WORLDS, getPrevWorld, isWorldComplete } from '../worlds';
+import { getWorldProgress } from '../challenge';
 import { drawTileBody } from './helpers';
 
 /**
- * The new top-level screen reached from Home. Grassland is always open (it's
- * the only world with mini-games so far); the other 5 reveal in order as
- * Story Mode levels are finished (2 levels per world — see game/worlds.ts).
- * Tapping a revealed-but-gameless world shows a "coming soon" toast instead
- * of a broken navigation, since there's genuinely nothing built there yet.
+ * The top-level screen reached from Home. Grassland is always open (it's
+ * the starting world); every other world unlocks the moment the world
+ * before it finishes its own 20-level Story Mode. Tapping any unlocked
+ * world drops straight into that world's Story Mode via ChallengeHub —
+ * there's no separate mini-game picker screen anymore.
  */
 export default class WorldSelectScene extends Phaser.Scene {
   constructor() {
@@ -21,7 +21,6 @@ export default class WorldSelectScene extends Phaser.Scene {
     this.drawBackground();
     this.drawHeader();
 
-    const progress = getProgress();
     const tileW = 300;
     const tileH = 280;
     const colGap = 26;
@@ -41,7 +40,7 @@ export default class WorldSelectScene extends Phaser.Scene {
     ];
 
     WORLDS.forEach((world, i) => {
-      this.createWorldTile(world, positions[i].x, positions[i].y, tileW, tileH, progress, i);
+      this.createWorldTile(world, positions[i].x, positions[i].y, tileW, tileH, i);
     });
   }
 
@@ -66,11 +65,10 @@ export default class WorldSelectScene extends Phaser.Scene {
       .setStrokeStyle(2, 0xffffff, 0.3);
     this.children.moveBelow(badge, title);
 
-    const progress = getProgress();
-    const done = storyLevelsCompleted(progress);
+    const { done, total } = this.totalStoryProgress();
     this.add.rectangle(GAME_WIDTH / 2, 210, 280, 52, 0xffffff, 0.95).setStrokeStyle(3, COLORS.ink, 0.08);
     this.add
-      .text(GAME_WIDTH / 2, 210, `📖 Story Mode: ${done}/10 levels`, {
+      .text(GAME_WIDTH / 2, 210, `📖 Story Mode: ${done}/${total} levels`, {
         fontFamily: 'Arial, sans-serif',
         fontSize: '24px',
         fontStyle: 'bold',
@@ -97,16 +95,30 @@ export default class WorldSelectScene extends Phaser.Scene {
     backBtn.on('pointerout', () => backBtn.setScale(1));
   }
 
+  /** Sum of levels finished across every world, out of every world's total. */
+  private totalStoryProgress(): { done: number; total: number } {
+    let done = 0;
+    let total = 0;
+    WORLDS.forEach((world) => {
+      total += world.levelCount;
+      done += Math.min(getWorldProgress(world.id).levelIndex, world.levelCount);
+    });
+    return { done, total };
+  }
+
   private createWorldTile(
     world: (typeof WORLDS)[number],
     x: number,
     y: number,
     w: number,
     h: number,
-    progress: ReturnType<typeof getProgress>,
     index: number
   ) {
-    const unlocked = isWorldUnlocked(world, progress);
+    const prev = getPrevWorld(world.id);
+    const unlocked = !prev || isWorldComplete(prev, getWorldProgress(prev.id));
+    const myProgress = getWorldProgress(world.id);
+    const completed = isWorldComplete(world, myProgress);
+
     const container = this.add.container(x, y);
     const { shadow, body } = drawTileBody(this, container, w, h, unlocked ? COLORS.white : 0xd8d8d8);
 
@@ -128,29 +140,26 @@ export default class WorldSelectScene extends Phaser.Scene {
 
     container.add([art, label]);
 
-    if (unlocked && world.hasGames) {
-      const star = this.add.text(w / 2 - 26, -h / 2 + 20, '▶️', { fontSize: '26px' }).setOrigin(0.5);
-      container.add(star);
-    } else if (unlocked && !world.hasGames) {
-      const badge = this.add
-        .text(w / 2 - 40, -h / 2 + 24, '✨ New!', {
+    if (unlocked) {
+      const badgeText = completed ? '⭐' : '▶️';
+      const badge = this.add.text(w / 2 - 26, -h / 2 + 20, badgeText, { fontSize: '26px' }).setOrigin(0.5);
+      container.add(badge);
+
+      const progressLabel = this.add
+        .text(0, h / 2 - 24, `${Math.min(myProgress.levelIndex, world.levelCount)}/${world.levelCount}`, {
           fontFamily: 'Arial, sans-serif',
           fontSize: '18px',
-          fontStyle: 'bold',
-          color: '#4a3728',
-          backgroundColor: '#ffffff',
-          padding: { x: 8, y: 4 },
+          color: '#8a8a8a',
         })
         .setOrigin(0.5);
-      container.add(badge);
+      container.add(progressLabel);
     } else {
       const lockBadge = this.add.circle(w / 2 - 32, -h / 2 + 32, 26, 0xffffff, 0.9);
       const lock = this.add.text(w / 2 - 32, -h / 2 + 32, '🔒', { fontSize: '24px' }).setOrigin(0.5);
-      const need = (world.unlockAtStoryLevel ?? 0) - storyLevelsCompleted(progress);
       const subtitle = this.add
-        .text(0, h / 2 - 24, `Finish ${need} more Story level${need === 1 ? '' : 's'}`, {
+        .text(0, h / 2 - 24, `Finish ${prev?.label ?? 'previous world'}'s Story`, {
           fontFamily: 'Arial, sans-serif',
-          fontSize: '18px',
+          fontSize: '17px',
           color: '#8a8a8a',
         })
         .setOrigin(0.5);
@@ -168,15 +177,10 @@ export default class WorldSelectScene extends Phaser.Scene {
 
       if (!unlocked) {
         this.tweens.add({ targets: container, x: '+=8', duration: 60, yoyo: true, repeat: 2 });
-        const need = (world.unlockAtStoryLevel ?? 0) - storyLevelsCompleted(progress);
-        this.showToast(`🔒 Finish ${need} more Story level${need === 1 ? '' : 's'} to unlock ${world.label}!`);
+        this.showToast(`🔒 Finish ${prev?.label ?? 'the previous world'}'s Story to unlock ${world.label}!`);
         return;
       }
-      if (!world.hasGames) {
-        this.showToast(`🚧 ${world.label} games are coming in a future update!`);
-        return;
-      }
-      this.time.delayedCall(140, () => this.scene.start('WorldMap'));
+      this.time.delayedCall(140, () => this.scene.start('ChallengeHub', { worldId: world.id }));
     });
 
     container.setAlpha(0);

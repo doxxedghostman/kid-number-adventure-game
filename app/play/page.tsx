@@ -33,8 +33,8 @@ export default function PlayPage() {
   // be a full-bleed, statically-positioned box for it to measure against.
   //
   // This route renders ONLY the Phaser canvas — it is not a place for
-  // duplicate HTML menu buttons. The actual world/mini-game menu lives
-  // inside WorldMapScene (a Phaser scene), not in this React component.
+  // duplicate HTML menu buttons. The actual world/level menu lives inside
+  // WorldSelectScene and ChallengeHubScene (Phaser scenes), not here.
   return (
     <div
       style={{

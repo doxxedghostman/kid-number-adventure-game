@@ -5,6 +5,7 @@ import { STORY_BEATS, StoryBeat } from '../story';
 import { markStorySeen } from '../challenge';
 
 interface StoryData {
+  worldId: string;
   storyId: string;
   nextScene: string;
   nextSceneData?: Record<string, unknown>;
@@ -76,7 +77,7 @@ export default class StoryScene extends Phaser.Scene {
       this.showLine(beat);
       return;
     }
-    markStorySeen(this.storyData.storyId);
+    markStorySeen(this.storyData.worldId, this.storyData.storyId);
     this.input.off('pointerdown');
     this.scene.start(this.storyData.nextScene, this.storyData.nextSceneData);
   }

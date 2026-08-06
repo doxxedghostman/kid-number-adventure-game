@@ -8,6 +8,7 @@ interface RewardData {
   coinsEarned: number;
   starsEarned: number;
   nextScene: string;
+  nextSceneData?: Record<string, unknown>;
   unlockedWorld?: WorldDef | null;
 }
 
@@ -80,9 +81,9 @@ export default class RewardScene extends Phaser.Scene {
 
     continueBtn.on('pointerdown', () => {
       if (data.unlockedWorld) {
-        this.showWorldUnlocked(data.unlockedWorld, data.nextScene ?? 'WorldMap');
+        this.showWorldUnlocked(data.unlockedWorld, data.nextScene ?? 'WorldSelect', data.nextSceneData);
       } else {
-        this.scene.start(data.nextScene ?? 'WorldMap');
+        this.scene.start(data.nextScene ?? 'WorldSelect', data.nextSceneData);
       }
     });
   }
@@ -94,7 +95,7 @@ export default class RewardScene extends Phaser.Scene {
    * Covers the reward screen, plays a few waves of confetti, bounces the
    * world's real tile art in, then continues to nextScene on tap.
    */
-  private showWorldUnlocked(world: WorldDef, nextScene: string) {
+  private showWorldUnlocked(world: WorldDef, nextScene: string, nextSceneData?: Record<string, unknown>) {
     const overlay = this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.55).setOrigin(0).setAlpha(0);
     this.tweens.add({ targets: overlay, alpha: 1, duration: 200 });
 
@@ -160,6 +161,6 @@ export default class RewardScene extends Phaser.Scene {
     this.tweens.add({ targets: tapHint, alpha: 1, duration: 300, delay: 900 });
 
     overlay.setInteractive();
-    overlay.once('pointerdown', () => this.scene.start(nextScene));
+    overlay.once('pointerdown', () => this.scene.start(nextScene, nextSceneData));
   }
 }

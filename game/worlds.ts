@@ -1,55 +1,58 @@
 /**
- * The 6 worlds shown on the World Select screen. Only Grassland has actual
- * mini-games built — the rest exist so progress in Story Mode reveals a real
- * roadmap instead of showing all 6 (mostly-empty) worlds from day one.
+ * The 6 worlds shown on the World Select screen. Each world is a full,
+ * self-contained 20-level Story Mode. Grassland is always open (it's the
+ * starting/home world); every other world unlocks the moment the previous
+ * world's 20 levels are finished — that's it, one story flows into the
+ * next.
  *
- * Unlock rule: Grassland is always open (it's the starting/home world).
- * Each of the other 5 worlds unlocks after finishing 2 more Story Mode
- * levels — that's every world tile spent exactly once across the existing
- * 10-level ladder (2,4,6,8,10), no leftover levels or worlds.
+ * There's no separate "mini-game picker" anymore: tapping an unlocked
+ * world drops the player straight into ChallengeHub for that world, which
+ * always knows exactly which of the 20 levels comes next.
  */
-
-import { CHALLENGE_LEVELS } from './levels';
-import type { Progress } from './progress';
 
 export interface WorldDef {
   id: string;
   label: string;
   tileKey: string; // world-tile-<id>, loaded in BootScene
   bgKey: string; // world-bg-<id>, loaded in BootScene
-  hasGames: boolean; // only Grassland does, for now
-  /** Story Mode levels-completed needed to reveal this world. null = always unlocked. */
-  unlockAtStoryLevel: number | null;
+  levelCount: number; // every world's Story Mode length
 }
 
 export const WORLDS: WorldDef[] = [
-  { id: 'grassland', label: 'Grassland', tileKey: 'world-tile-grassland', bgKey: 'world-bg-grassland', hasGames: true, unlockAtStoryLevel: null },
-  { id: 'forest', label: 'Forest', tileKey: 'world-tile-forest', bgKey: 'world-bg-forest', hasGames: false, unlockAtStoryLevel: 2 },
-  { id: 'ocean', label: 'Ocean', tileKey: 'world-tile-ocean', bgKey: 'world-bg-ocean', hasGames: false, unlockAtStoryLevel: 4 },
-  { id: 'space', label: 'Space', tileKey: 'world-tile-space', bgKey: 'world-bg-space', hasGames: false, unlockAtStoryLevel: 6 },
-  { id: 'candyland', label: 'Candyland', tileKey: 'world-tile-candyland', bgKey: 'world-bg-candyland', hasGames: false, unlockAtStoryLevel: 8 },
-  { id: 'dinoisland', label: 'Dino Island', tileKey: 'world-tile-dinoisland', bgKey: 'world-bg-dinoisland', hasGames: false, unlockAtStoryLevel: 10 },
+  { id: 'grassland', label: 'Grassland', tileKey: 'world-tile-grassland', bgKey: 'world-bg-grassland', levelCount: 20 },
+  { id: 'forest', label: 'Forest', tileKey: 'world-tile-forest', bgKey: 'world-bg-forest', levelCount: 20 },
+  { id: 'ocean', label: 'Ocean', tileKey: 'world-tile-ocean', bgKey: 'world-bg-ocean', levelCount: 20 },
+  { id: 'space', label: 'Space', tileKey: 'world-tile-space', bgKey: 'world-bg-space', levelCount: 20 },
+  { id: 'candyland', label: 'Candyland', tileKey: 'world-tile-candyland', bgKey: 'world-bg-candyland', levelCount: 20 },
+  { id: 'dinoisland', label: 'Dino Island', tileKey: 'world-tile-dinoisland', bgKey: 'world-bg-dinoisland', levelCount: 20 },
 ];
 
-/** How many of the 10 Story Mode levels have been finished at least once. */
-export function storyLevelsCompleted(progress: Progress): number {
-  return CHALLENGE_LEVELS.filter((l) => progress.completedLevels.includes(l.id)).length;
+/** Minimal shape needed to judge completion — matches challenge.ts's WorldProgressState. */
+export interface WorldProgressLike {
+  levelIndex: number;
 }
 
-export function isWorldUnlocked(world: WorldDef, progress: Progress): boolean {
-  if (world.unlockAtStoryLevel == null) return true;
-  return storyLevelsCompleted(progress) >= world.unlockAtStoryLevel;
+export function isWorldComplete(world: WorldDef, progress: WorldProgressLike): boolean {
+  return progress.levelIndex >= world.levelCount;
 }
 
-/**
- * Did completing this level just cross a world's unlock threshold? Compare
- * the Story-levels-completed count from just before vs just after saving
- * this level's completion. Mini-game scenes call this around their
- * completeLevel() call so Reward can show a "World Unlocked!" celebration
- * exactly once, the moment it happens — not just silently reflected next
- * time the player visits World Select.
- */
-export function getNewlyUnlockedWorld(beforeCount: number, afterCount: number): WorldDef | null {
-  if (afterCount <= beforeCount) return null;
-  return WORLDS.find((w) => w.unlockAtStoryLevel != null && w.unlockAtStoryLevel > beforeCount && w.unlockAtStoryLevel <= afterCount) ?? null;
+export function getWorldByIndex(index: number): WorldDef | null {
+  return WORLDS[index] ?? null;
+}
+
+export function getWorldIndex(worldId: string): number {
+  return WORLDS.findIndex((w) => w.id === worldId);
+}
+
+/** The world right before this one in the ladder, or null for Grassland (the first world). */
+export function getPrevWorld(worldId: string): WorldDef | null {
+  const idx = getWorldIndex(worldId);
+  return idx <= 0 ? null : WORLDS[idx - 1];
+}
+
+/** The world right after this one, or null if this is the last world. */
+export function getNextWorld(worldId: string): WorldDef | null {
+  const idx = getWorldIndex(worldId);
+  if (idx === -1) return null;
+  return WORLDS[idx + 1] ?? null;
 }

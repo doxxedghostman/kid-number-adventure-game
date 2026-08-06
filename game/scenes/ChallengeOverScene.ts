@@ -78,7 +78,7 @@ export default class ChallengeOverScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
-    backBtn.on('pointerdown', () => this.scene.start('WorldMap'));
+    backBtn.on('pointerdown', () => this.scene.start('WorldSelect'));
   }
 
   private makeButton(y: number, color: number, label: string, enabled: boolean, onTap: () => void) {
