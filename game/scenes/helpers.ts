@@ -26,6 +26,34 @@ export function addWorldBackground(scene: Phaser.Scene, worldId: string, dim = t
 }
 
 /**
+ * Rounded "3D" tile body: an offset dark rectangle behind a lighter rounded
+ * body, matching the app's CSS button look (border-bottom shadow). Shared by
+ * WorldMapScene and WorldSelectScene so every tile-grid screen looks the
+ * same and there's one place to tweak the style.
+ */
+export function drawTileBody(
+  scene: Phaser.Scene,
+  container: Phaser.GameObjects.Container,
+  w: number,
+  h: number,
+  color: number,
+  radius = 28
+) {
+  const shadow = scene.add.graphics();
+  shadow.fillStyle(0x000000, 0.2);
+  shadow.fillRoundedRect(-w / 2, -h / 2 + 8, w, h, radius);
+
+  const body = scene.add.graphics();
+  body.fillStyle(color, 1);
+  body.fillRoundedRect(-w / 2, -h / 2, w, h, radius);
+  body.lineStyle(4, 0xffffff, 0.55);
+  body.strokeRoundedRect(-w / 2, -h / 2, w, h, radius);
+
+  container.add([shadow, body]);
+  return { shadow, body };
+}
+
+/**
  * Draws a big rounded "tile" with a number on it — used anywhere the game
  * needs to show a numeral (Balloon Pop targets, Number Match cards, Feed
  * Dino's apple count). No image asset needed: it's a Graphics circle + Text,

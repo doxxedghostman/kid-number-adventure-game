@@ -37,6 +37,6 @@ export default class BootScene extends Phaser.Scene {
   }
 
   create() {
-    this.scene.start('WorldMap');
+    this.scene.start('WorldSelect');
   }
 }

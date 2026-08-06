@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import BootScene from './scenes/BootScene';
+import WorldSelectScene from './scenes/WorldSelectScene';
 import WorldMapScene from './scenes/WorldMapScene';
 import BalloonPopScene from './scenes/BalloonPopScene';
 import FeedDinoScene from './scenes/FeedDinoScene';
@@ -33,6 +34,7 @@ export function createGameConfig(parent: string | HTMLElement): Phaser.Types.Cor
     },
     scene: [
       BootScene,
+      WorldSelectScene,
       WorldMapScene,
       BalloonPopScene,
       FeedDinoScene,

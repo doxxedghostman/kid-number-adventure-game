@@ -1,0 +1,230 @@
+import Phaser from 'phaser';
+import { GAME_WIDTH, GAME_HEIGHT } from '../config';
+import { COLORS } from '../theme';
+import { getProgress } from '../progress';
+import { WORLDS, isWorldUnlocked, storyLevelsCompleted } from '../worlds';
+import { drawTileBody } from './helpers';
+
+/**
+ * The new top-level screen reached from Home. Grassland is always open (it's
+ * the only world with mini-games so far); the other 5 reveal in order as
+ * Story Mode levels are finished (2 levels per world — see game/worlds.ts).
+ * Tapping a revealed-but-gameless world shows a "coming soon" toast instead
+ * of a broken navigation, since there's genuinely nothing built there yet.
+ */
+export default class WorldSelectScene extends Phaser.Scene {
+  constructor() {
+    super('WorldSelect');
+  }
+
+  create() {
+    this.drawBackground();
+    this.drawHeader();
+
+    const progress = getProgress();
+    const tileW = 300;
+    const tileH = 280;
+    const colGap = 26;
+    const rowGap = 26;
+    const col1X = GAME_WIDTH / 2 - tileW / 2 - colGap / 2;
+    const col2X = GAME_WIDTH / 2 + tileW / 2 + colGap / 2;
+    const row1Y = 380;
+    const row2Y = row1Y + tileH + rowGap;
+    const row3Y = row2Y + tileH + rowGap;
+    const positions = [
+      { x: col1X, y: row1Y },
+      { x: col2X, y: row1Y },
+      { x: col1X, y: row2Y },
+      { x: col2X, y: row2Y },
+      { x: col1X, y: row3Y },
+      { x: col2X, y: row3Y },
+    ];
+
+    WORLDS.forEach((world, i) => {
+      this.createWorldTile(world, positions[i].x, positions[i].y, tileW, tileH, progress, i);
+    });
+  }
+
+  private drawBackground() {
+    const sky = this.add.graphics();
+    sky.fillGradientStyle(0x8fd8ff, 0x8fd8ff, COLORS.skyBlue, COLORS.skyBlue, 1);
+    sky.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  }
+
+  private drawHeader() {
+    const title = this.add
+      .text(GAME_WIDTH / 2, 140, 'Choose Your World', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '42px',
+        fontStyle: 'bold',
+        color: '#ffffff',
+      })
+      .setOrigin(0.5)
+      .setShadow(0, 3, 'rgba(0,0,0,0.25)', 4);
+    const badge = this.add
+      .rectangle(GAME_WIDTH / 2, 140, title.width + 60, 70, 0xffffff, 0.22)
+      .setStrokeStyle(2, 0xffffff, 0.3);
+    this.children.moveBelow(badge, title);
+
+    const progress = getProgress();
+    const done = storyLevelsCompleted(progress);
+    this.add.rectangle(GAME_WIDTH / 2, 210, 280, 52, 0xffffff, 0.95).setStrokeStyle(3, COLORS.ink, 0.08);
+    this.add
+      .text(GAME_WIDTH / 2, 210, `📖 Story Mode: ${done}/10 levels`, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '24px',
+        fontStyle: 'bold',
+        color: '#4a3728',
+      })
+      .setOrigin(0.5);
+
+    // Exit to the Next.js home menu — this is now the outermost Phaser screen.
+    this.add.circle(60, 64, 44, 0x000000, 0.18);
+    const backBtn = this.add.circle(60, 60, 44, 0xffffff, 0.95).setInteractive({ useHandCursor: true });
+    this.add.text(60, 60, '🏠', { fontSize: '36px' }).setOrigin(0.5);
+    backBtn.on('pointerdown', () => {
+      this.tweens.add({
+        targets: backBtn,
+        scale: 0.9,
+        duration: 80,
+        yoyo: true,
+        onComplete: () => {
+          window.location.href = '/';
+        },
+      });
+    });
+    backBtn.on('pointerover', () => backBtn.setScale(1.06));
+    backBtn.on('pointerout', () => backBtn.setScale(1));
+  }
+
+  private createWorldTile(
+    world: (typeof WORLDS)[number],
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    progress: ReturnType<typeof getProgress>,
+    index: number
+  ) {
+    const unlocked = isWorldUnlocked(world, progress);
+    const container = this.add.container(x, y);
+    const { shadow, body } = drawTileBody(this, container, w, h, unlocked ? COLORS.white : 0xd8d8d8);
+
+    const art = this.add.image(0, -30, world.tileKey).setOrigin(0.5);
+    art.setScale((w - 40) / art.width);
+    if (!unlocked) {
+      art.setTint(0x888888);
+      art.setAlpha(0.6);
+    }
+
+    const label = this.add
+      .text(0, h / 2 - 56, world.label, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '26px',
+        fontStyle: 'bold',
+        color: unlocked ? '#4a3728' : '#8a8a8a',
+      })
+      .setOrigin(0.5);
+
+    container.add([art, label]);
+
+    if (unlocked && world.hasGames) {
+      const star = this.add.text(w / 2 - 26, -h / 2 + 20, '▶️', { fontSize: '26px' }).setOrigin(0.5);
+      container.add(star);
+    } else if (unlocked && !world.hasGames) {
+      const badge = this.add
+        .text(w / 2 - 40, -h / 2 + 24, '✨ New!', {
+          fontFamily: 'Arial, sans-serif',
+          fontSize: '18px',
+          fontStyle: 'bold',
+          color: '#4a3728',
+          backgroundColor: '#ffffff',
+          padding: { x: 8, y: 4 },
+        })
+        .setOrigin(0.5);
+      container.add(badge);
+    } else {
+      const lockBadge = this.add.circle(w / 2 - 32, -h / 2 + 32, 26, 0xffffff, 0.9);
+      const lock = this.add.text(w / 2 - 32, -h / 2 + 32, '🔒', { fontSize: '24px' }).setOrigin(0.5);
+      const need = (world.unlockAtStoryLevel ?? 0) - storyLevelsCompleted(progress);
+      const subtitle = this.add
+        .text(0, h / 2 - 24, `Finish ${need} more Story level${need === 1 ? '' : 's'}`, {
+          fontFamily: 'Arial, sans-serif',
+          fontSize: '18px',
+          color: '#8a8a8a',
+        })
+        .setOrigin(0.5);
+      container.add([lockBadge, lock, subtitle]);
+    }
+
+    container.setSize(w, h);
+    container.setInteractive(new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h), Phaser.Geom.Rectangle.Contains);
+
+    container.on('pointerover', () => this.tweens.add({ targets: container, scale: 1.03, duration: 100 }));
+    container.on('pointerout', () => this.tweens.add({ targets: container, scale: 1, duration: 100 }));
+    container.on('pointerdown', () => {
+      this.tweens.add({ targets: body, y: 6, duration: 70, yoyo: true });
+      shadow.setAlpha(0.5);
+
+      if (!unlocked) {
+        this.tweens.add({ targets: container, x: '+=8', duration: 60, yoyo: true, repeat: 2 });
+        const need = (world.unlockAtStoryLevel ?? 0) - storyLevelsCompleted(progress);
+        this.showToast(`🔒 Finish ${need} more Story level${need === 1 ? '' : 's'} to unlock ${world.label}!`);
+        return;
+      }
+      if (!world.hasGames) {
+        this.showToast(`🚧 ${world.label} games are coming in a future update!`);
+        return;
+      }
+      this.time.delayedCall(140, () => this.scene.start('WorldMap'));
+    });
+
+    container.setAlpha(0);
+    container.setScale(0.8);
+    this.tweens.add({
+      targets: container,
+      alpha: 1,
+      scale: 1,
+      duration: 380,
+      delay: index * 80,
+      ease: 'Back.Out',
+    });
+  }
+
+  private showToast(message: string) {
+    const bg = this.add
+      .rectangle(GAME_WIDTH / 2, GAME_HEIGHT - 140, GAME_WIDTH - 100, 100, 0x000000, 0.85)
+      .setStrokeStyle(2, 0xffffff, 0.2);
+    const text = this.add
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 140, message, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '22px',
+        fontStyle: 'bold',
+        color: '#ffffff',
+        align: 'center',
+        wordWrap: { width: GAME_WIDTH - 160 },
+      })
+      .setOrigin(0.5);
+
+    bg.setAlpha(0);
+    text.setAlpha(0);
+    this.tweens.add({
+      targets: [bg, text],
+      alpha: 1,
+      duration: 150,
+      onComplete: () => {
+        this.time.delayedCall(1800, () => {
+          this.tweens.add({
+            targets: [bg, text],
+            alpha: 0,
+            duration: 300,
+            onComplete: () => {
+              bg.destroy();
+              text.destroy();
+            },
+          });
+        });
+      },
+    });
+  }
+}

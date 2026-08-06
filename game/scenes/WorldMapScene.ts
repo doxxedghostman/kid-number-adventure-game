@@ -3,6 +3,7 @@ import { GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { COLORS } from '../theme';
 import { getProgress } from '../progress';
 import { getChallenge, MAX_LIVES } from '../challenge';
+import { drawTileBody } from './helpers';
 
 interface GameTile {
   key: string;
@@ -95,10 +96,11 @@ export default class WorldMapScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    // Exit back to the Next.js home menu — same 3D-shadow treatment as the game tiles.
+    // Back one level to World Select — the Next.js home menu is now a scene
+    // further out, reached from there instead.
     this.add.circle(60, 64, 44, 0x000000, 0.18);
     const backBtn = this.add.circle(60, 60, 44, 0xffffff, 0.95).setInteractive({ useHandCursor: true });
-    this.add.text(60, 60, '🏠', { fontSize: '36px' }).setOrigin(0.5);
+    this.add.text(60, 60, '🗺️', { fontSize: '32px' }).setOrigin(0.5);
     backBtn.on('pointerdown', () => {
       this.tweens.add({
         targets: backBtn,
@@ -106,28 +108,12 @@ export default class WorldMapScene extends Phaser.Scene {
         duration: 80,
         yoyo: true,
         onComplete: () => {
-          window.location.href = '/';
+          this.scene.start('WorldSelect');
         },
       });
     });
     backBtn.on('pointerover', () => backBtn.setScale(1.06));
     backBtn.on('pointerout', () => backBtn.setScale(1));
-  }
-
-  /** Rounded "3D" tile: an offset dark rectangle behind a lighter rounded body, like the app's CSS buttons. */
-  private drawTileBody(container: Phaser.GameObjects.Container, w: number, h: number, color: number, radius = 28) {
-    const shadow = this.add.graphics();
-    shadow.fillStyle(0x000000, 0.2);
-    shadow.fillRoundedRect(-w / 2, -h / 2 + 8, w, h, radius);
-
-    const body = this.add.graphics();
-    body.fillStyle(color, 1);
-    body.fillRoundedRect(-w / 2, -h / 2, w, h, radius);
-    body.lineStyle(4, 0xffffff, 0.55);
-    body.strokeRoundedRect(-w / 2, -h / 2, w, h, radius);
-
-    container.add([shadow, body]);
-    return { shadow, body };
   }
 
   private createGameTile(
@@ -142,7 +128,7 @@ export default class WorldMapScene extends Phaser.Scene {
     const isDone = completed.some((id) => id.includes(game.key.toLowerCase()));
 
     const container = this.add.container(x, y);
-    const { shadow, body } = this.drawTileBody(container, w, h, game.color);
+    const { shadow, body } = drawTileBody(this, container, w, h, game.color);
 
     const iconBadge = this.add.circle(0, -34, 52, 0xffffff, 0.25);
     const icon: Phaser.GameObjects.Text | Phaser.GameObjects.Image = game.iconTexture
@@ -219,11 +205,11 @@ export default class WorldMapScene extends Phaser.Scene {
     const w = 630;
     const h = 190;
     const container = this.add.container(x, y);
-    const { shadow, body } = this.drawTileBody(container, w, h, COLORS.sunYellow, 32);
+    const { shadow, body } = drawTileBody(this, container, w, h, COLORS.sunYellow, 32);
 
     const icon = this.add.text(-220, -8, '⚡', { fontSize: '72px' }).setOrigin(0.5);
     const label = this.add
-      .text(30, -30, 'Challenge Mode', {
+      .text(30, -30, 'Story Mode', {
         fontFamily: 'Arial, sans-serif',
         fontSize: '34px',
         fontStyle: 'bold',
