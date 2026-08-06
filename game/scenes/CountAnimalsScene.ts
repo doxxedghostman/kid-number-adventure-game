@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
-import { createHud, createNumberTile, celebrate, flyCoins, randomInt, createRoundTimer, addWorldBackground } from './helpers';
+import { createHud, createNumberTile, celebrate, flyCoins, randomInt, createRoundTimer, addWorldBackground, completeStoryLevel } from './helpers';
 import { completeLevel } from '../progress';
 import { loseLife, advanceLevel } from '../challenge';
 import { ChallengeRunConfig } from '../levels';
@@ -142,9 +142,9 @@ export default class CountAnimalsScene extends Phaser.Scene {
     const coinsEarned = roundCount * (this.challenge?.coinsPerCorrect ?? COINS_PER_CORRECT);
     const starsEarned = 3;
     if (this.challenge) {
-      completeLevel(this.challenge.levelId, 0, starsEarned);
+      const unlockedWorld = completeStoryLevel(this.challenge.levelId, starsEarned);
       advanceLevel();
-      this.scene.start('Reward', { coinsEarned, starsEarned, nextScene: 'ChallengeHub' });
+      this.scene.start('Reward', { coinsEarned, starsEarned, nextScene: 'ChallengeHub', unlockedWorld });
     } else {
       completeLevel('world1-count-animals', 0, starsEarned);
       this.scene.start('Reward', { coinsEarned, starsEarned, nextScene: 'WorldMap' });

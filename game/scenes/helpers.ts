@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { COLORS, PALETTE_CYCLE } from '../theme';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
-import { getProgress, addCoins as persistCoins } from '../progress';
+import { getProgress, addCoins as persistCoins, completeLevel } from '../progress';
+import { storyLevelsCompleted, getNewlyUnlockedWorld, WorldDef } from '../worlds';
 
 /**
  * Cover-fits a world's full-scene background art (landscape, ~960x536) into
@@ -23,6 +24,19 @@ export function addWorldBackground(scene: Phaser.Scene, worldId: string, dim = t
     scene.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, COLORS.white, 0.55).setOrigin(0);
   }
   return bg;
+}
+
+/**
+ * Records a Story Mode level completion and reports back whether it just
+ * crossed a world's unlock threshold. Coins are credited live already (see
+ * addCoins on the hud returned by createHud), so this only passes stars/
+ * completion through to completeLevel — never coins again.
+ */
+export function completeStoryLevel(levelId: string, starsEarned: number): WorldDef | null {
+  const before = storyLevelsCompleted(getProgress());
+  completeLevel(levelId, 0, starsEarned);
+  const after = storyLevelsCompleted(getProgress());
+  return getNewlyUnlockedWorld(before, after);
 }
 
 /**
@@ -100,6 +114,33 @@ export function celebrate(scene: Phaser.Scene, x: number, y: number) {
       duration: Phaser.Math.Between(500, 900),
       ease: 'Cubic.Out',
       onComplete: () => piece.destroy(),
+    });
+  }
+}
+
+/**
+ * Bigger, longer confetti for milestone moments (World Unlocked) — full
+ * canvas width, falls from the top instead of bursting from a point, and
+ * fires in a few waves so it feels like an event, not just a round-win tick.
+ */
+export function bigCelebrate(scene: Phaser.Scene) {
+  const waves = 3;
+  for (let w = 0; w < waves; w++) {
+    scene.time.delayedCall(w * 260, () => {
+      for (let i = 0; i < 22; i++) {
+        const color = PALETTE_CYCLE[Phaser.Math.Between(0, PALETTE_CYCLE.length - 1)];
+        const startX = Phaser.Math.Between(20, GAME_WIDTH - 20);
+        const piece = scene.add.rectangle(startX, -20, 16, 16, color);
+        scene.tweens.add({
+          targets: piece,
+          y: GAME_HEIGHT + 40,
+          x: startX + Phaser.Math.Between(-80, 80),
+          angle: Phaser.Math.Between(-360, 360),
+          duration: Phaser.Math.Between(1400, 2200),
+          ease: 'Cubic.In',
+          onComplete: () => piece.destroy(),
+        });
+      }
     });
   }
 }

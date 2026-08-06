@@ -40,3 +40,16 @@ export function isWorldUnlocked(world: WorldDef, progress: Progress): boolean {
   if (world.unlockAtStoryLevel == null) return true;
   return storyLevelsCompleted(progress) >= world.unlockAtStoryLevel;
 }
+
+/**
+ * Did completing this level just cross a world's unlock threshold? Compare
+ * the Story-levels-completed count from just before vs just after saving
+ * this level's completion. Mini-game scenes call this around their
+ * completeLevel() call so Reward can show a "World Unlocked!" celebration
+ * exactly once, the moment it happens — not just silently reflected next
+ * time the player visits World Select.
+ */
+export function getNewlyUnlockedWorld(beforeCount: number, afterCount: number): WorldDef | null {
+  if (afterCount <= beforeCount) return null;
+  return WORLDS.find((w) => w.unlockAtStoryLevel != null && w.unlockAtStoryLevel > beforeCount && w.unlockAtStoryLevel <= afterCount) ?? null;
+}
