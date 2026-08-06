@@ -1,7 +1,29 @@
 import Phaser from 'phaser';
 import { COLORS, PALETTE_CYCLE } from '../theme';
-import { GAME_WIDTH } from '../config';
+import { GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { getProgress, addCoins as persistCoins } from '../progress';
+
+/**
+ * Cover-fits a world's full-scene background art (landscape, ~960x536) into
+ * the portrait 720x1280 canvas: scales to fill the height, crops the sides.
+ * Every screen for a given world (map + all its mini-games) calls this with
+ * the same worldId so the whole world reads as one consistent place, not a
+ * different flat color per screen.
+ *
+ * `dim` layers a soft white wash on top for legibility — gameplay elements
+ * (balloons, apples, HUD text) need to stay readable over busy photo-real
+ * art, whereas the World Map's big tiles have their own opaque backing and
+ * don't need it.
+ */
+export function addWorldBackground(scene: Phaser.Scene, worldId: string, dim = true) {
+  const bg = scene.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, `world-bg-${worldId}`);
+  const scale = GAME_HEIGHT / bg.height;
+  bg.setScale(scale);
+  if (dim) {
+    scene.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, COLORS.white, 0.55).setOrigin(0);
+  }
+  return bg;
+}
 
 /**
  * Draws a big rounded "tile" with a number on it — used anywhere the game

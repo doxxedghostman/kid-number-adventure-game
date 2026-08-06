@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
-import { COLORS } from '../theme';
-import { createHud, createNumberTile, celebrate, flyCoins, randomInt, createRoundTimer } from './helpers';
+import { createHud, createNumberTile, celebrate, flyCoins, randomInt, createRoundTimer, addWorldBackground } from './helpers';
 import { completeLevel } from '../progress';
 import { loseLife, advanceLevel } from '../challenge';
 import { ChallengeRunConfig } from '../levels';
@@ -26,7 +25,7 @@ export default class CountAnimalsScene extends Phaser.Scene {
 
   create(data?: { challenge?: ChallengeRunConfig }) {
     this.challenge = data?.challenge;
-    this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, COLORS.skyBlue).setOrigin(0);
+    addWorldBackground(this, 'grassland');
     this.round = 0;
     this.hud = createHud(this, '', () => this.scene.start('WorldMap'));
     this.nextRound();

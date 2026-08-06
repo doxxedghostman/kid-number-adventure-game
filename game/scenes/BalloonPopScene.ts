@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
-import { COLORS, PALETTE_CYCLE } from '../theme';
-import { createHud, celebrate, flyCoins, randomInt, createRoundTimer } from './helpers';
+import { BALLOON_TEXTURES } from '../theme';
+import { createHud, celebrate, flyCoins, randomInt, createRoundTimer, addWorldBackground } from './helpers';
 import { completeLevel } from '../progress';
 import { loseLife, advanceLevel } from '../challenge';
 import { ChallengeRunConfig } from '../levels';
@@ -25,7 +25,7 @@ export default class BalloonPopScene extends Phaser.Scene {
 
   create(data?: { challenge?: ChallengeRunConfig }) {
     this.challenge = data?.challenge;
-    this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, COLORS.skyBlue).setOrigin(0);
+    addWorldBackground(this, 'grassland');
     this.round = 0;
     this.hud = createHud(this, '', () => this.scene.start('WorldMap'));
     this.nextRound();
@@ -92,25 +92,31 @@ export default class BalloonPopScene extends Phaser.Scene {
   }
 
   private spawnBalloon(x: number, y: number, value: number) {
-    const color = PALETTE_CYCLE[value % PALETTE_CYCLE.length];
-    const string = this.add.rectangle(x, y + 95, 3, 60, 0x999999);
-    const body = this.add.ellipse(x, y, 130, 160, color).setStrokeStyle(4, 0xffffff, 0.6);
+    const texture = BALLOON_TEXTURES[value % BALLOON_TEXTURES.length];
+    // Balloon art is 170x300 (bulb + curly string baked into one image),
+    // scaled to a ~150px-wide footprint on the canvas.
+    const scale = 150 / 170;
+    const body = this.add.image(x, y, texture).setScale(scale).setOrigin(0.5);
+    // Label sits over the round bulb, not the image's vertical center
+    // (which falls in the string) — bulb center is ~60px above the source
+    // image's middle at native size.
     const label = this.add
-      .text(x, y, String(value), {
+      .text(x, y - 60 * scale, String(value), {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '64px',
+        fontSize: '56px',
         fontStyle: 'bold',
         color: '#ffffff',
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setShadow(0, 2, 'rgba(0,0,0,0.25)', 3);
 
-    const container = this.add.container(0, 0, [string, body, label]);
-    container.setSize(130, 220);
+    const container = this.add.container(0, 0, [body, label]);
+    container.setSize(150, 264);
     body.setInteractive({ useHandCursor: true });
 
     // Gentle bob so balloons feel alive.
     this.tweens.add({
-      targets: [body, label, string],
+      targets: [body, label],
       y: '+=18',
       duration: Phaser.Math.Between(1200, 1800),
       yoyo: true,
@@ -118,7 +124,7 @@ export default class BalloonPopScene extends Phaser.Scene {
       ease: 'Sine.InOut',
     });
 
-    body.on('pointerdown', () => this.handleTap(value, x, y, container, body, label, string));
+    body.on('pointerdown', () => this.handleTap(value, x, y, container, body, label));
     this.balloons.push(container);
   }
 
@@ -127,9 +133,8 @@ export default class BalloonPopScene extends Phaser.Scene {
     x: number,
     y: number,
     container: Phaser.GameObjects.Container,
-    body: Phaser.GameObjects.Ellipse,
-    label: Phaser.GameObjects.Text,
-    string: Phaser.GameObjects.Rectangle
+    body: Phaser.GameObjects.Image,
+    label: Phaser.GameObjects.Text
   ) {
     if (this.busy) return;
 
@@ -141,7 +146,6 @@ export default class BalloonPopScene extends Phaser.Scene {
       flyCoins(this, x, y, earned, () => this.hud.addCoins(earned));
       body.destroy();
       label.destroy();
-      string.destroy();
       this.time.delayedCall(500, () => this.nextRound());
     } else {
       // "Funny pop" for a wrong guess: it wobbles and shrinks briefly instead

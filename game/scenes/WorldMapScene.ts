@@ -9,14 +9,15 @@ interface GameTile {
   label: string;
   emoji: string;
   color: number;
+  iconTexture?: string; // real sprite key, used instead of the emoji when set
 }
 
 // MVP scope only (per project doc): Balloon Pop, Feed Dino, Count Animals, Number Match.
 // Memory Cards / Fishing / Train / Shape Count / Trace Number are later-update scenes —
 // add them here once built, no other wiring needed.
 const MVP_GAMES: GameTile[] = [
-  { key: 'BalloonPop', label: 'Balloon Pop', emoji: '🎈', color: COLORS.bubblePink },
-  { key: 'FeedDino', label: 'Feed Dino', emoji: '🦕', color: COLORS.grassGreen },
+  { key: 'BalloonPop', label: 'Balloon Pop', emoji: '🎈', color: COLORS.bubblePink, iconTexture: 'balloon-pink' },
+  { key: 'FeedDino', label: 'Feed Dino', emoji: '🦕', color: COLORS.grassGreen, iconTexture: 'dino-happy' },
   { key: 'CountAnimals', label: 'Count Animals', emoji: '🐶', color: COLORS.tangerine },
   { key: 'NumberMatch', label: 'Number Match', emoji: '🔢', color: COLORS.grapePurple },
 ];
@@ -59,63 +60,11 @@ export default class WorldMapScene extends Phaser.Scene {
   }
 
   private drawBackground() {
-    // Sky gradient instead of a flat fill.
-    const sky = this.add.graphics();
-    sky.fillGradientStyle(0x6fd0ff, 0x6fd0ff, COLORS.skyBlue, COLORS.skyBlue, 1);
-    sky.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-    // Sun glow, top-left corner (kept clear of the coin/back HUD on the right/left).
-    const sunX = 110;
-    const sunY = 130;
-    this.add.circle(sunX, sunY, 110, COLORS.sunYellow, 0.2);
-    this.add.circle(sunX, sunY, 70, COLORS.sunYellow, 0.4);
-    this.add.circle(sunX, sunY, 46, COLORS.sunYellow, 1);
-
-    // Drifting clouds — cheap parallax feel via looping tweens, no image assets.
-    this.makeCloud(520, 170, 1);
-    this.makeCloud(300, 260, 0.7);
-    this.makeCloud(600, 320, 0.55);
-
-    // Rolling hills toward the bottom, two tones like the home menu backdrop.
-    this.add.ellipse(GAME_WIDTH * 0.3, GAME_HEIGHT + 60, GAME_WIDTH * 1.3, 420, 0x8fdba0);
-    this.add.ellipse(GAME_WIDTH * 0.75, GAME_HEIGHT + 120, GAME_WIDTH * 1.1, 460, COLORS.grassGreen);
-
-    // A few candy-flower dots along the hill edge for texture.
-    const flowerSpots: { x: number; y: number; c: number }[] = [
-      { x: 90, y: GAME_HEIGHT - 210, c: COLORS.bubblePink },
-      { x: 150, y: GAME_HEIGHT - 230, c: COLORS.sunYellow },
-      { x: GAME_WIDTH - 130, y: GAME_HEIGHT - 220, c: COLORS.grapePurple },
-      { x: GAME_WIDTH - 70, y: GAME_HEIGHT - 195, c: COLORS.tangerine },
-    ];
-    flowerSpots.forEach((f) => this.makeFlower(f.x, f.y, f.c));
-  }
-
-  private makeCloud(x: number, y: number, speed: number) {
-    const group = this.add.container(x, y, [
-      this.add.ellipse(0, 0, 90, 46, 0xffffff, 0.9),
-      this.add.ellipse(30, -10, 60, 38, 0xffffff, 0.9),
-      this.add.ellipse(-30, -6, 50, 34, 0xffffff, 0.9),
-    ]);
-    this.tweens.add({
-      targets: group,
-      x: x + 26,
-      duration: 4000 / speed,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.InOut',
-    });
-  }
-
-  private makeFlower(x: number, y: number, color: number) {
-    const petals = [
-      [0, 0],
-      [-7, 0],
-      [7, 0],
-      [0, -7],
-      [0, 7],
-    ];
-    petals.forEach(([dx, dy]) => this.add.circle(x + dx, y + dy, 4, color, dx === 0 && dy === 0 ? 1 : 0.8));
-    this.add.circle(x, y, 2.5, COLORS.cream);
+    // Real world art, cover-scaled to fill the portrait canvas — same
+    // grassland-bg used by the 4 mini-games so the whole world reads as one
+    // consistent place instead of a different flat color per screen.
+    const bg = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'world-bg-grassland');
+    bg.setScale(GAME_HEIGHT / bg.height);
   }
 
   private drawHeader() {
@@ -196,7 +145,9 @@ export default class WorldMapScene extends Phaser.Scene {
     const { shadow, body } = this.drawTileBody(container, w, h, game.color);
 
     const iconBadge = this.add.circle(0, -34, 52, 0xffffff, 0.25);
-    const icon = this.add.text(0, -34, game.emoji, { fontSize: '56px' }).setOrigin(0.5);
+    const icon: Phaser.GameObjects.Text | Phaser.GameObjects.Image = game.iconTexture
+      ? this.add.image(0, -34, game.iconTexture).setScale(76 / (this.textures.get(game.iconTexture).getSourceImage().height))
+      : this.add.text(0, -34, game.emoji, { fontSize: '56px' }).setOrigin(0.5);
     const label = this.add
       .text(0, 58, game.label, {
         fontFamily: 'Arial, sans-serif',

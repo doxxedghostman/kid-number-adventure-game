@@ -20,6 +20,20 @@ export const PALETTE_CYCLE = [
   COLORS.sunYellow,
 ];
 
+// Balloon sprite keys (see BootScene preload), same order/index as
+// PALETTE_CYCLE so BalloonPopScene's existing `value % PALETTE_CYCLE.length`
+// indexing works unchanged for picking a texture instead of a fill color.
+// 'balloon-red' is the "+1 extra" color — not in the cycle, kept spare for
+// future use (e.g. a special/decoy balloon).
+export const BALLOON_TEXTURES = [
+  'balloon-pink',
+  'balloon-green',
+  'balloon-blue',
+  'balloon-orange',
+  'balloon-purple',
+  'balloon-yellow',
+];
+
 // Minimum tap-target size (px, at design resolution) — nothing in the game
 // should require more precision than a toddler's finger can manage.
 export const MIN_TAP_SIZE = 140;

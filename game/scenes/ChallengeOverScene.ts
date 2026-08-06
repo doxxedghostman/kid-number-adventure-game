@@ -27,7 +27,8 @@ export default class ChallengeOverScene extends Phaser.Scene {
       .rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH - 100, 800, COLORS.cream)
       .setStrokeStyle(6, 0xffffff, 0.8);
 
-    this.add.text(GAME_WIDTH / 2, panel.y - 330, '💔', { fontSize: '90px' }).setOrigin(0.5);
+    const sadDino = this.add.image(GAME_WIDTH / 2, panel.y - 320, 'dino-sad').setOrigin(0.5);
+    sadDino.setScale(150 / sadDino.height);
     this.add
       .text(GAME_WIDTH / 2, panel.y - 230, 'Out of Hearts!', {
         fontFamily: 'Arial, sans-serif',

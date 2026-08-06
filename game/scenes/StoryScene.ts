@@ -32,7 +32,8 @@ export default class StoryScene extends Phaser.Scene {
 
     const portraitY = panel.y - 200;
     this.add.circle(GAME_WIDTH / 2, portraitY, 90, beat.portraitColor).setStrokeStyle(6, 0xffffff, 0.8);
-    this.add.text(GAME_WIDTH / 2, portraitY, beat.portraitEmoji, { fontSize: '90px' }).setOrigin(0.5);
+    const portrait = this.add.image(GAME_WIDTH / 2, portraitY, beat.portraitImageKey).setOrigin(0.5);
+    portrait.setScale(170 / portrait.height);
 
     this.add
       .text(GAME_WIDTH / 2, portraitY + 130, beat.speaker, {

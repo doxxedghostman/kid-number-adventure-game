@@ -1,11 +1,8 @@
 import { COLORS } from './theme';
 
 /**
- * Story beats for Challenge Mode. Portraits are emoji-in-a-circle, same
- * "no image asset needed yet" pattern as celebrate()/createNumberTile() in
- * helpers.ts — once the 8 unlockable-character art assets exist, swap
- * `portraitEmoji` for a `this.add.image(...)` call in StoryScene and these
- * data entries barely change.
+ * Story beats for Challenge Mode. Portraits use the real character art
+ * loaded in BootScene (dino-*, char-*) — see StoryScene's portrait circle.
  *
  * Narrative: a gust of wind scattered Dino's animal friends across
  * Grassland. Each Challenge level "finds" one friend via that level's
@@ -14,7 +11,8 @@ import { COLORS } from './theme';
  */
 export interface StoryBeat {
   speaker: string;
-  portraitEmoji: string;
+  /** Texture key loaded in BootScene (dino-*, char-*). */
+  portraitImageKey: string;
   portraitColor: number;
   lines: string[];
 }
@@ -22,7 +20,7 @@ export interface StoryBeat {
 export const STORY_BEATS: Record<string, StoryBeat> = {
   intro: {
     speaker: 'Dino',
-    portraitEmoji: '🦕',
+    portraitImageKey: 'dino-wave',
     portraitColor: COLORS.grassGreen,
     lines: [
       'Oh no! A big gust of wind just blew through Grassland!',
@@ -32,67 +30,67 @@ export const STORY_BEATS: Record<string, StoryBeat> = {
   },
   'level-1': {
     speaker: 'Dino',
-    portraitEmoji: '🦕',
+    portraitImageKey: 'dino-idle',
     portraitColor: COLORS.grassGreen,
     lines: ["I hear something behind those balloons...", 'Pop the right one to find Bear!'],
   },
   'level-2': {
     speaker: 'Bear',
-    portraitEmoji: '🐻',
+    portraitImageKey: 'char-bear',
     portraitColor: COLORS.tangerine,
     lines: ['You found me! Thank you!', "But now I'm hungry — let's feed the whole gang together!"],
   },
   'level-3': {
     speaker: 'Dino',
-    portraitEmoji: '🦕',
+    portraitImageKey: 'dino-idle',
     portraitColor: COLORS.grassGreen,
     lines: ["Someone's hiding in the grass...", 'Count carefully to spot Cat!'],
   },
   'level-4': {
     speaker: 'Cat',
-    portraitEmoji: '🐱',
+    portraitImageKey: 'char-cat',
     portraitColor: COLORS.grapePurple,
     lines: ['Meow! Elephant left number clues before she wandered off.', 'Match the right group to find her!'],
   },
   'level-5': {
     speaker: 'Elephant',
-    portraitEmoji: '🐘',
+    portraitImageKey: 'char-elephant',
     portraitColor: COLORS.skyBlue,
     lines: ['Rabbit hopped off with a whole bunch of balloons!', "This one's trickier — good luck!"],
   },
   'level-6': {
     speaker: 'Rabbit',
-    portraitEmoji: '🐰',
+    portraitImageKey: 'char-rabbit',
     portraitColor: COLORS.bubblePink,
     lines: ["Panda's too shy to come out...", 'Maybe if everyone eats together, Panda will join us!'],
   },
   'level-7': {
     speaker: 'Panda',
-    portraitEmoji: '🐼',
+    portraitImageKey: 'char-panda',
     portraitColor: COLORS.ink,
     lines: ['Penguin waddled all the way to the pond!', "Count closely, this one's sneaky."],
   },
   'level-8': {
     speaker: 'Penguin',
-    portraitEmoji: '🐧',
+    portraitImageKey: 'char-penguin',
     portraitColor: COLORS.skyBlue,
     lines: ['Fox is the cleverest of us all.', 'This match will be your trickiest yet!'],
   },
   'level-9': {
     speaker: 'Fox',
-    portraitEmoji: '🦊',
+    portraitImageKey: 'char-fox',
     portraitColor: COLORS.tangerine,
     lines: ["Almost everyone's home!", 'One more windy round before we celebrate — stay sharp!'],
   },
   'level-10': {
     speaker: 'Dino',
-    portraitEmoji: '🦕',
+    portraitImageKey: 'dino-idle',
     portraitColor: COLORS.grassGreen,
     lines: ['This is it — the whole gang is cheering you on!', "One last count and we're all together again!"],
   },
   finale: {
     speaker: 'Dino',
-    portraitEmoji: '🎉',
+    portraitImageKey: 'dino-happy',
     portraitColor: COLORS.sunYellow,
     lines: [
       'You found everyone! Grassland is whole again!',
