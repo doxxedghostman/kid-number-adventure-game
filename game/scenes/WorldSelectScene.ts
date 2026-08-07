@@ -183,8 +183,19 @@ export default class WorldSelectScene extends Phaser.Scene {
       container.add([lockBadge, lock, subtitle]);
     }
 
+    // NOTE: Container hit areas are NOT centered like a Sprite's. Phaser
+    // hard-codes a Container's origin to (0.5, 0.5) and *always* shifts the
+    // incoming point by (width/2, height/2) before testing it against the
+    // hit area (see Phaser's InputManager.pointWithinHitArea). A rectangle
+    // defined as (-w/2, -h/2, w, h) — the intuitive "centered on the
+    // container" shape — silently ends up tested half a tile off-center,
+    // so taps on the right/bottom half of a tile land on whichever tile is
+    // actually sitting in that shifted zone (the next column/row over).
+    // The correct hit area for a Container is (0, 0, w, h) — Phaser's own
+    // origin shift re-centers that back onto the container automatically.
     container.setSize(w, h);
-    container.setInteractive(new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h), Phaser.Geom.Rectangle.Contains);
+    container.setInteractive(new Phaser.Geom.Rectangle(0, 0, w, h), Phaser.Geom.Rectangle.Contains);
+    container.name = `tile-${world.id}`;
 
     container.on('pointerover', () => this.tweens.add({ targets: container, scale: 1.03, duration: 100 }));
     container.on('pointerout', () => this.tweens.add({ targets: container, scale: 1, duration: 100 }));
