@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { COLORS } from '../theme';
-import { createHud, celebrate, flyCoins, randomInt, createRoundTimer, addWorldBackground, completeStoryLevel } from './helpers';
+import { createHud, celebrate, flyCoins, randomInt, createRoundTimer, addWorldBackground, completeStoryLevel, playSfx } from './helpers';
 import { completeLevel } from '../progress';
 import { loseLife } from '../challenge';
 import { ChallengeRunConfig } from '../levels';
@@ -82,7 +82,10 @@ export default class FeedDinoScene extends Phaser.Scene {
       const x = 140 + col * 150;
       const y = 300 + row * 150;
       const apple = this.add.text(x, y, '🍎', { fontSize: '80px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-      apple.on('pointerdown', () => this.handleTapApple(apple));
+      apple.on('pointerdown', () => {
+        playSfx(this, 'tap');
+        this.handleTapApple(apple);
+      });
       this.apples.push(apple);
     }
 
@@ -128,6 +131,7 @@ export default class FeedDinoScene extends Phaser.Scene {
   private failRound() {
     if (this.busy) return;
     this.busy = true;
+    playSfx(this, 'fail');
     this.hud.setInstructions(`Dino needed ${this.target} apples!`);
     const state = loseLife();
     this.time.delayedCall(1100, () => {

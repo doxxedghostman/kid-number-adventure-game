@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { COLORS } from '../theme';
-import { createHud, createNumberTile, celebrate, flyCoins, randomInt, createRoundTimer, addWorldBackground, completeStoryLevel } from './helpers';
+import { createHud, createNumberTile, celebrate, flyCoins, randomInt, createRoundTimer, addWorldBackground, completeStoryLevel, playSfx } from './helpers';
 import { completeLevel } from '../progress';
 import { loseLife } from '../challenge';
 import { ChallengeRunConfig } from '../levels';
@@ -80,7 +80,10 @@ export default class NumberMatchScene extends Phaser.Scene {
         this.roundObjects.push(icon);
       }
 
-      zone.on('pointerdown', () => this.handleAnswer(count, zone, icons));
+      zone.on('pointerdown', () => {
+        playSfx(this, 'tap');
+        this.handleAnswer(count, zone, icons);
+      });
     });
 
     if (this.challenge?.timeLimitSec) {
@@ -99,6 +102,7 @@ export default class NumberMatchScene extends Phaser.Scene {
       flyCoins(this, zone.x, zone.y, earned, () => this.hud.addCoins(earned));
       this.time.delayedCall(600, () => this.nextRound());
     } else {
+      playSfx(this, 'wrong');
       this.tweens.add({ targets: [zone, ...icons], scale: 0.96, duration: 100, yoyo: true });
 
       if (this.challenge) {
@@ -115,6 +119,7 @@ export default class NumberMatchScene extends Phaser.Scene {
     if (this.busy) return;
     this.busy = true;
     this.roundTimer?.destroy();
+    playSfx(this, 'fail');
     this.hud.setInstructions(`The answer was ${this.answer}!`);
     const state = loseLife();
     this.time.delayedCall(1100, () => {

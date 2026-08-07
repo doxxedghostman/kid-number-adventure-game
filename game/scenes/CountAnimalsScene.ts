@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
-import { createHud, createNumberTile, celebrate, flyCoins, randomInt, createRoundTimer, addWorldBackground, completeStoryLevel } from './helpers';
+import { createHud, createNumberTile, celebrate, flyCoins, randomInt, createRoundTimer, addWorldBackground, completeStoryLevel, playSfx } from './helpers';
 import { completeLevel } from '../progress';
 import { loseLife } from '../challenge';
 import { ChallengeRunConfig } from '../levels';
@@ -82,7 +82,10 @@ export default class CountAnimalsScene extends Phaser.Scene {
       // (0, 0), or taps on the tile silently fail to register (see the
       // matching fix/comment in WorldSelectScene's createWorldTile).
       tile.setInteractive(new Phaser.Geom.Circle(r, r, r), Phaser.Geom.Circle.Contains);
-      tile.on('pointerdown', () => this.handleAnswer(value, tile));
+      tile.on('pointerdown', () => {
+        playSfx(this, 'tap');
+        this.handleAnswer(value, tile);
+      });
       this.roundObjects.push(tile);
     });
 
@@ -102,6 +105,7 @@ export default class CountAnimalsScene extends Phaser.Scene {
       flyCoins(this, tile.x, tile.y, earned, () => this.hud.addCoins(earned));
       this.time.delayedCall(600, () => this.nextRound());
     } else {
+      playSfx(this, 'wrong');
       this.tweens.add({ targets: tile, scale: 0.9, duration: 100, yoyo: true });
 
       if (this.challenge) {
@@ -118,6 +122,7 @@ export default class CountAnimalsScene extends Phaser.Scene {
     if (this.busy) return;
     this.busy = true;
     this.roundTimer?.destroy();
+    playSfx(this, 'fail');
     this.hud.setInstructions(`The answer was ${this.answer}!`);
     const state = loseLife();
     this.time.delayedCall(1100, () => {

@@ -41,6 +41,15 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('ui-icon-back', 'assets/ui/icons/icon-back.png');
     this.load.image('ui-icon-coin', 'assets/ui/icons/icon-coin.png');
     this.load.image('ui-icon-heart', 'assets/ui/icons/icon-heart.png');
+
+    // Sound effects.
+    this.load.audio('sfx-tap', 'assets/sounds/tap.wav');
+    this.load.audio('sfx-correct', 'assets/sounds/correct.wav');
+    this.load.audio('sfx-wrong', 'assets/sounds/wrong.wav');
+    this.load.audio('sfx-fail', 'assets/sounds/fail.wav');
+    this.load.audio('sfx-coin', 'assets/sounds/coin.wav');
+    this.load.audio('sfx-celebrate', 'assets/sounds/celebrate.wav');
+    this.load.audio('sfx-bigwin', 'assets/sounds/bigwin.wav');
   }
 
   create() {

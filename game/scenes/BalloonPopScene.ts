@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { BALLOON_TEXTURES } from '../theme';
-import { createHud, celebrate, flyCoins, randomInt, createRoundTimer, addWorldBackground, completeStoryLevel } from './helpers';
+import { createHud, celebrate, flyCoins, randomInt, createRoundTimer, addWorldBackground, completeStoryLevel, playSfx } from './helpers';
 import { completeLevel } from '../progress';
 import { loseLife } from '../challenge';
 import { ChallengeRunConfig } from '../levels';
@@ -124,7 +124,10 @@ export default class BalloonPopScene extends Phaser.Scene {
       ease: 'Sine.InOut',
     });
 
-    body.on('pointerdown', () => this.handleTap(value, x, y, container, body, label));
+    body.on('pointerdown', () => {
+      playSfx(this, 'tap');
+      this.handleTap(value, x, y, container, body, label);
+    });
     this.balloons.push(container);
   }
 
@@ -150,6 +153,7 @@ export default class BalloonPopScene extends Phaser.Scene {
     } else {
       // "Funny pop" for a wrong guess: it wobbles and shrinks briefly instead
       // of vanishing — wrong answers aren't punished, just gently corrected.
+      playSfx(this, 'wrong');
       this.tweens.add({
         targets: [body, label],
         scale: 0.85,
@@ -175,6 +179,7 @@ export default class BalloonPopScene extends Phaser.Scene {
     if (this.busy) return;
     this.busy = true;
     this.roundTimer?.destroy();
+    playSfx(this, 'fail');
     this.hud.setInstructions(`The answer was ${this.target}!`);
     const state = loseLife();
     this.time.delayedCall(1100, () => {

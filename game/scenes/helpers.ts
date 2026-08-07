@@ -104,8 +104,23 @@ export function createNumberTile(
   return container;
 }
 
+/**
+ * Plays a preloaded sound effect by short name (e.g. 'tap', 'correct',
+ * 'wrong', 'fail', 'coin', 'celebrate', 'bigwin'). Wrapped in try/catch
+ * since audio can fail to init on some browsers/webviews — a missing
+ * sound should never break gameplay.
+ */
+export function playSfx(scene: Phaser.Scene, name: 'tap' | 'correct' | 'wrong' | 'fail' | 'coin' | 'celebrate' | 'bigwin') {
+  try {
+    scene.sound.play(`sfx-${name}`);
+  } catch (e) {
+    // Audio not available — silently ignore.
+  }
+}
+
 /** Cheap confetti burst: small colored rectangles that fly out and fade. No image assets required. */
 export function celebrate(scene: Phaser.Scene, x: number, y: number) {
+  playSfx(scene, 'celebrate');
   for (let i = 0; i < 18; i++) {
     const color = PALETTE_CYCLE[i % PALETTE_CYCLE.length];
     const piece = scene.add.rectangle(x, y, 14, 14, color);
@@ -130,6 +145,7 @@ export function celebrate(scene: Phaser.Scene, x: number, y: number) {
  * fires in a few waves so it feels like an event, not just a round-win tick.
  */
 export function bigCelebrate(scene: Phaser.Scene) {
+  playSfx(scene, 'bigwin');
   const waves = 3;
   for (let w = 0; w < waves; w++) {
     scene.time.delayedCall(w * 260, () => {
@@ -159,6 +175,7 @@ export function bigCelebrate(scene: Phaser.Scene) {
  * vanishing into a corner with nothing tracking them.
  */
 export function flyCoins(scene: Phaser.Scene, x: number, y: number, count: number, onLanded?: () => void) {
+  playSfx(scene, 'coin');
   const coinsToShow = Math.min(count, 8);
   for (let i = 0; i < coinsToShow; i++) {
     const coin = scene.add.circle(x, y, 16, COLORS.sunYellow).setStrokeStyle(3, COLORS.tangerine);
@@ -192,7 +209,10 @@ export function createHud(scene: Phaser.Scene, instructions: string, onBack: () 
   scene.add
     .text(60, 60, '←', { fontFamily: 'Arial', fontSize: '40px', color: '#4a3728' })
     .setOrigin(0.5);
-  backBtn.on('pointerdown', onBack);
+  backBtn.on('pointerdown', () => {
+    playSfx(scene, 'tap');
+    onBack();
+  });
 
   // Coin badge, top-right — same spot flyCoins() animates coins toward.
   const coinPill = scene.add
