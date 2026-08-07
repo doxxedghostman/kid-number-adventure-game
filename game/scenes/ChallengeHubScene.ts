@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import { getWorldLevels, ChallengeRunConfig } from '../levels';
 import { WORLDS } from '../worlds';
 import { getWorldProgress, hasLives, hasSeenStory } from '../challenge';

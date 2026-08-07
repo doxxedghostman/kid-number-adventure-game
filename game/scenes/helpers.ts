@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import { COLORS, PALETTE_CYCLE } from '../theme';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { getProgress, addCoins as persistCoins, completeLevel } from '../progress';
