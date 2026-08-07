@@ -74,8 +74,14 @@ export default class CountAnimalsScene extends Phaser.Scene {
     const spacing = Math.min(maxSpacing, (GAME_WIDTH - 140) / (shuffled.length - 1 || 1));
     const startX = GAME_WIDTH / 2 - (spacing * (shuffled.length - 1)) / 2;
     shuffled.forEach((value, i) => {
-      const tile = createNumberTile(this, startX + i * spacing, y, value, { radius: Math.min(65, spacing / 2 - 4) });
-      tile.setInteractive(new Phaser.Geom.Circle(0, 0, Math.min(65, spacing / 2 - 4)), Phaser.Geom.Circle.Contains);
+      const r = Math.min(65, spacing / 2 - 4);
+      const tile = createNumberTile(this, startX + i * spacing, y, value, { radius: r });
+      // Containers hard-code their origin to (0.5, 0.5), so Phaser always
+      // shifts an incoming tap by (radius, radius) before testing it
+      // against the hit area — the circle must be centered at (r, r), not
+      // (0, 0), or taps on the tile silently fail to register (see the
+      // matching fix/comment in WorldSelectScene's createWorldTile).
+      tile.setInteractive(new Phaser.Geom.Circle(r, r, r), Phaser.Geom.Circle.Contains);
       tile.on('pointerdown', () => this.handleAnswer(value, tile));
       this.roundObjects.push(tile);
     });
