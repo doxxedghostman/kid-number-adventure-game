@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { COLORS } from '../theme';
-import { celebrate, bigCelebrate } from './helpers';
+import { celebrate, bigCelebrate, playSfx } from './helpers';
 import type { WorldDef } from '../worlds';
 
 interface RewardData {
@@ -18,6 +18,7 @@ export default class RewardScene extends Phaser.Scene {
   }
 
   create(data: RewardData) {
+    playSfx(this, 'nextlevel');
     this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, COLORS.grapePurple).setOrigin(0);
 
     this.add.image(GAME_WIDTH / 2, 190, 'dino-happy').setScale(0.34).setOrigin(0.5);

@@ -37,3 +37,9 @@ export const BALLOON_TEXTURES = [
 // Minimum tap-target size (px, at design resolution) — nothing in the game
 // should require more precision than a toddler's finger can manage.
 export const MIN_TAP_SIZE = 140;
+
+// Same rounded display font used app-wide by the Next.js UI (see
+// app/layout.tsx's Google Fonts link + globals.css --font-display). Falls
+// back to a system rounded/sans font if the webfont hasn't loaded yet, so
+// text never disappears — it just briefly looks a bit less playful.
+export const FONT_FAMILY = "'Fredoka', ui-rounded, Arial, sans-serif";

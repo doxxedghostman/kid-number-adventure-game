@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { playBackgroundMusic } from './helpers';
 
 export default class BootScene extends Phaser.Scene {
   constructor() {
@@ -50,9 +51,20 @@ export default class BootScene extends Phaser.Scene {
     this.load.audio('sfx-coin', 'assets/sounds/coin.wav');
     this.load.audio('sfx-celebrate', 'assets/sounds/celebrate.wav');
     this.load.audio('sfx-bigwin', 'assets/sounds/bigwin.wav');
+    // Plays whenever a level finishes and the Reward screen comes up — a
+    // distinct "you did it, next level!" cue on top of the confetti-pop
+    // 'celebrate' sound that also fires per-round. Drop the file in as
+    // either format; whichever the browser supports gets used.
+    this.load.audio('sfx-nextlevel', ['assets/sounds/nextlevel.wav', 'assets/sounds/nextlevel.mp3']);
+
+    // Looping background music for the whole game session. Also accepts
+    // either format — mp3 is the better choice for a full-length music
+    // loop (much smaller file for the same length than .wav).
+    this.load.audio('bgm-main', ['assets/sounds/bgm.mp3', 'assets/sounds/bgm.wav']);
   }
 
   create() {
+    playBackgroundMusic(this);
     this.scene.start('WorldSelect');
   }
 }

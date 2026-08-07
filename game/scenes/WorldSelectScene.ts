@@ -1,9 +1,19 @@
 import * as Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
-import { COLORS } from '../theme';
+import { COLORS, FONT_FAMILY } from '../theme';
 import { WORLDS, getPrevWorld, isWorldComplete } from '../worlds';
 import { getWorldProgress } from '../challenge';
 import { drawTileBody } from './helpers';
+
+// Header layout, pulled up out of drawHeader() so the tile grid below can
+// line up against it without guessing. Moved noticeably higher up the
+// screen (and with real gaps between title → badge → tile grid) compared to
+// the old cramped version, where the "Story Mode" badge nearly touched the
+// first row of tiles.
+const TITLE_Y = 80;
+const BADGE_Y = 165;
+const BADGE_H = 56;
+const HEADER_BOTTOM_Y = BADGE_Y + BADGE_H / 2;
 
 /**
  * The top-level screen reached from Home. Grassland is always open (it's
@@ -27,7 +37,11 @@ export default class WorldSelectScene extends Phaser.Scene {
     const rowGap = 26;
     const col1X = GAME_WIDTH / 2 - tileW / 2 - colGap / 2;
     const col2X = GAME_WIDTH / 2 + tileW / 2 + colGap / 2;
-    const row1Y = 380;
+    // Header now sits higher (see drawHeader) with real breathing room below
+    // it, so the first row of world tiles no longer needs to start as low
+    // as it used to — HEADER_BOTTOM_Y is the true bottom edge of the "Story
+    // Mode: x/y levels" badge; row1Y adds a clear ~40px gap from there.
+    const row1Y = HEADER_BOTTOM_Y + 40 + tileH / 2;
     const row2Y = row1Y + tileH + rowGap;
     const row3Y = row2Y + tileH + rowGap;
     const positions = [
@@ -52,24 +66,24 @@ export default class WorldSelectScene extends Phaser.Scene {
 
   private drawHeader() {
     const title = this.add
-      .text(GAME_WIDTH / 2, 140, 'Choose Your World', {
-        fontFamily: 'Arial, sans-serif',
+      .text(GAME_WIDTH / 2, TITLE_Y, 'Choose Your World', {
+        fontFamily: FONT_FAMILY,
         fontSize: '42px',
         fontStyle: 'bold',
         color: '#ffffff',
       })
       .setOrigin(0.5)
       .setShadow(0, 3, 'rgba(0,0,0,0.25)', 4);
-    const badge = this.add
-      .rectangle(GAME_WIDTH / 2, 140, title.width + 60, 70, 0xffffff, 0.22)
+    const titleBadge = this.add
+      .rectangle(GAME_WIDTH / 2, TITLE_Y, title.width + 60, 70, 0xffffff, 0.22)
       .setStrokeStyle(2, 0xffffff, 0.3);
-    this.children.moveBelow(badge, title);
+    this.children.moveBelow(titleBadge, title);
 
     const { done, total } = this.totalStoryProgress();
-    this.add.rectangle(GAME_WIDTH / 2, 210, 280, 52, 0xffffff, 0.95).setStrokeStyle(3, COLORS.ink, 0.08);
+    this.add.rectangle(GAME_WIDTH / 2, BADGE_Y, 280, BADGE_H, 0xffffff, 0.95).setStrokeStyle(3, COLORS.ink, 0.08);
     this.add
-      .text(GAME_WIDTH / 2, 210, `📖 Story Mode: ${done}/${total} levels`, {
-        fontFamily: 'Arial, sans-serif',
+      .text(GAME_WIDTH / 2, BADGE_Y, `📖 Story Mode: ${done}/${total} levels`, {
+        fontFamily: FONT_FAMILY,
         fontSize: '24px',
         fontStyle: 'bold',
         color: '#4a3728',
@@ -147,7 +161,7 @@ export default class WorldSelectScene extends Phaser.Scene {
 
     const label = this.add
       .text(0, h / 2 - footerH + 24, world.label, {
-        fontFamily: 'Arial, sans-serif',
+        fontFamily: FONT_FAMILY,
         fontSize: '24px',
         fontStyle: 'bold',
         color: unlocked ? '#4a3728' : '#9a9a9a',
@@ -164,7 +178,7 @@ export default class WorldSelectScene extends Phaser.Scene {
 
       const progressLabel = this.add
         .text(0, h / 2 - footerH + 56, `${Math.min(myProgress.levelIndex, world.levelCount)}/${world.levelCount}`, {
-          fontFamily: 'Arial, sans-serif',
+          fontFamily: FONT_FAMILY,
           fontSize: '17px',
           color: '#8a8a8a',
         })
@@ -175,7 +189,7 @@ export default class WorldSelectScene extends Phaser.Scene {
       const lock = this.add.text(w / 2 - 32, -h / 2 + 32, '🔒', { fontSize: '24px' }).setOrigin(0.5);
       const subtitle = this.add
         .text(0, h / 2 - footerH + 56, `Finish ${prev?.label ?? 'previous world'}'s Story`, {
-          fontFamily: 'Arial, sans-serif',
+          fontFamily: FONT_FAMILY,
           fontSize: '15px',
           color: '#9a9a9a',
         })
@@ -237,7 +251,7 @@ export default class WorldSelectScene extends Phaser.Scene {
       .setStrokeStyle(2, 0xffffff, 0.2);
     const text = this.add
       .text(GAME_WIDTH / 2, GAME_HEIGHT - 140, message, {
-        fontFamily: 'Arial, sans-serif',
+        fontFamily: FONT_FAMILY,
         fontSize: '22px',
         fontStyle: 'bold',
         color: '#ffffff',

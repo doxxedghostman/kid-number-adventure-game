@@ -1,14 +1,18 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Button from '@/components/Button';
 import { exportProgressCode, importProgressCode } from '@/game/progress';
+import { getAudioSettings, setAudioSettings } from '@/game/audioSettings';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [music, setMusic] = useState(true);
-  const [sound, setSound] = useState(true);
+  // Read the real persisted preference on first render (not a hardcoded
+  // `true`) so this screen accurately reflects whatever was chosen last —
+  // useState(false) initializer arg only runs once, on mount.
+  const [music, setMusic] = useState(() => getAudioSettings().music);
+  const [sound, setSound] = useState(() => getAudioSettings().sound);
 
   const [backupCode, setBackupCode] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
@@ -44,6 +48,20 @@ export default function SettingsPage() {
     }
   };
 
+  const toggleMusic = () => {
+    setMusic((m) => {
+      setAudioSettings({ music: !m });
+      return !m;
+    });
+  };
+
+  const toggleSound = () => {
+    setSound((s) => {
+      setAudioSettings({ sound: !s });
+      return !s;
+    });
+  };
+
   return (
     <main
       style={{
@@ -58,17 +76,19 @@ export default function SettingsPage() {
     >
       <h1 style={{ color: 'white', textShadow: '0 3px 0 rgba(0,0,0,0.15)' }}>Settings</h1>
 
-      <Button color="purple" onClick={() => setMusic((m) => !m)}>
+      <Button color="purple" onClick={toggleMusic}>
         {music ? '🎵 Music: On' : '🔇 Music: Off'}
       </Button>
-      <Button color="blue" onClick={() => setSound((s) => !s)}>
+      <Button color="blue" onClick={toggleSound}>
         {sound ? '🔊 Sound: On' : '🔈 Sound: Off'}
       </Button>
 
       {/*
-        TODO: these toggles aren't wired to the Phaser audio system yet —
-        that needs sound.mute / sound.volume set from a shared settings
-        module once real audio assets are loaded in BootScene.
+        Persisted via game/audioSettings.ts (localStorage). BootScene reads
+        this once at game boot to decide whether to autoplay bgm-main and
+        playSfx() checks it on every call, so a change here takes effect
+        the next time the Phaser game (re)starts — i.e. immediately if
+        you're navigating here from, or back to, the Play screen.
       */}
 
       <div

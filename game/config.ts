@@ -10,11 +10,32 @@ import StoryScene from './scenes/StoryScene';
 import ChallengeHubScene from './scenes/ChallengeHubScene';
 import ChallengeOverScene from './scenes/ChallengeOverScene';
 
-// Design-resolution canvas; Phaser.Scale.FIT letterboxes/scales it to whatever
-// the phone/browser gives us, so every scene can be built against these fixed
-// coordinates without worrying about device size.
+// Design-resolution canvas. GAME_WIDTH is fixed; GAME_HEIGHT is derived from
+// the *real* device/browser aspect ratio the moment this module first loads
+// (client-side only, inside app/play's dynamic import — window is always
+// defined by then). Matching the design aspect ratio to the real viewport
+// aspect ratio means Phaser.Scale.FIT lands on a scale of ~1 in both axes at
+// once, so there's no leftover letterbox strip top/bottom or left/right —
+// the canvas always fills the whole screen edge-to-edge. Every scene is
+// still built purely against GAME_WIDTH/GAME_HEIGHT (never hardcoded 1280s),
+// so this "moves" safely without any scene-by-scene changes.
+//
+// Clamped to a plausible phone-portrait range (1.5–2.3, i.e. roughly iPad
+// Mini portrait through a very tall/narrow phone) so an unusual window
+// (desktop browser tab, tablet, landscape) can't stretch the design into
+// something absurd — those fall back to a normal small FIT letterbox
+// instead, which is the safe/expected behavior there.
+function computeGameHeight(width: number): number {
+  if (typeof window === 'undefined' || !window.innerWidth || !window.innerHeight) {
+    return Math.round(width * (1280 / 720)); // SSR/build-time fallback, never actually rendered
+  }
+  const rawAspect = window.innerHeight / window.innerWidth;
+  const aspect = Math.min(2.3, Math.max(1.5, rawAspect));
+  return Math.round(width * aspect);
+}
+
 export const GAME_WIDTH = 720;
-export const GAME_HEIGHT = 1280;
+export const GAME_HEIGHT = computeGameHeight(GAME_WIDTH);
 
 export function createGameConfig(parent: string | HTMLElement): Phaser.Types.Core.GameConfig {
   return {

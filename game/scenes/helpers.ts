@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { COLORS, PALETTE_CYCLE } from '../theme';
+import { COLORS, PALETTE_CYCLE, FONT_FAMILY } from '../theme';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { getProgress, addCoins as persistCoins, completeLevel } from '../progress';
 import { WORLDS, getNextWorld, isWorldComplete, WorldDef } from '../worlds';
@@ -92,7 +92,7 @@ export function createNumberTile(
   const circle = scene.add.circle(0, 0, radius, color).setStrokeStyle(6, COLORS.ink, 0.15);
   const label = scene.add
     .text(0, 0, String(value), {
-      fontFamily: 'Arial, sans-serif',
+      fontFamily: FONT_FAMILY,
       fontSize: `${Math.round(radius * 1.1)}px`,
       fontStyle: 'bold',
       color: '#ffffff',
@@ -104,17 +104,50 @@ export function createNumberTile(
   return container;
 }
 
+import { getAudioSettings } from '../audioSettings';
+
 /**
  * Plays a preloaded sound effect by short name (e.g. 'tap', 'correct',
- * 'wrong', 'fail', 'coin', 'celebrate', 'bigwin'). Wrapped in try/catch
- * since audio can fail to init on some browsers/webviews — a missing
- * sound should never break gameplay.
+ * 'wrong', 'fail', 'coin', 'celebrate', 'bigwin', 'nextlevel'). Wrapped in
+ * try/catch since audio can fail to init on some browsers/webviews — a
+ * missing sound should never break gameplay. Respects the Settings page's
+ * Sound toggle.
  */
-export function playSfx(scene: Phaser.Scene, name: 'tap' | 'correct' | 'wrong' | 'fail' | 'coin' | 'celebrate' | 'bigwin') {
+export function playSfx(
+  scene: Phaser.Scene,
+  name: 'tap' | 'correct' | 'wrong' | 'fail' | 'coin' | 'celebrate' | 'bigwin' | 'nextlevel'
+) {
+  if (!getAudioSettings().sound) return;
   try {
     scene.sound.play(`sfx-${name}`);
   } catch (e) {
     // Audio not available — silently ignore.
+  }
+}
+
+/**
+ * Starts the looping background music for the whole game session. Phaser's
+ * SoundManager lives on the Game instance, not the Scene, so it's shared
+ * across every scene transition (WorldSelect → mini-game → Reward → ...) —
+ * calling this once from BootScene.create() is enough to have it play
+ * continuously through the whole session without restarting on every scene
+ * change. Guarded by checking whether the 'bgm-main' sound object already
+ * exists on this session's SoundManager, so calling it again is a safe
+ * no-op (rather than a module-level flag, which would wrongly stay "true"
+ * across a full unmount/remount of the Phaser game on route changes).
+ * Respects the Settings page's Music toggle (checked once, at boot).
+ */
+export function playBackgroundMusic(scene: Phaser.Scene) {
+  if (scene.sound.get('bgm-main')) return;
+  try {
+    // Kept deliberately quiet (0.18) — "grand_prize_parade" is a fairly
+    // full, bright track on its own; this level keeps it as a bed under
+    // the sound effects (taps, correct/wrong dings, coins) rather than
+    // competing with them.
+    const bgm = scene.sound.add('bgm-main', { loop: true, volume: 0.18 });
+    if (getAudioSettings().music) bgm.play();
+  } catch (e) {
+    // Audio not available — game is still fully playable without music.
   }
 }
 
@@ -213,22 +246,25 @@ export function createHud(
 ) {
   const backBtn = scene.add.circle(60, 60, 44, COLORS.white, 0.9).setInteractive({ useHandCursor: true });
   scene.add
-    .text(60, 60, '←', { fontFamily: 'Arial', fontSize: '40px', color: '#4a3728' })
+    .text(60, 60, '←', { fontFamily: FONT_FAMILY, fontSize: '40px', color: '#4a3728' })
     .setOrigin(0.5);
   backBtn.on('pointerdown', () => {
     playSfx(scene, 'tap');
     onBack();
   });
 
-  // Heart row, under the back button — the live "how many tries do I have
-  // left" readout. Only drawn when the caller passes a lives count (i.e.
-  // Challenge Mode); Story Mode levels don't cost hearts, so there's
-  // nothing useful to show there.
+  // Heart row, clearly below the back button (not just barely below it) —
+  // the live "how many tries do I have left" readout. Only drawn when the
+  // caller passes a lives count (i.e. Challenge Mode); Story Mode levels
+  // don't cost hearts, so there's nothing useful to show there. Giving this
+  // its own vertical gap (back button bottom edge is at y=104) keeps the
+  // hearts from visually reading as tucked behind/underneath the button.
+  const heartsY = 150;
   let heartIcons: Phaser.GameObjects.Image[] = [];
   if (initialLives !== undefined) {
     for (let i = 0; i < MAX_LIVES; i++) {
       const icon = scene.add
-        .image(60 + i * 44, 128, 'ui-icon-heart')
+        .image(60 + i * 44, heartsY, 'ui-icon-heart')
         .setDisplaySize(36, 36)
         .setAlpha(i < initialLives ? 1 : 0.25);
       heartIcons.push(icon);
@@ -242,7 +278,7 @@ export function createHud(
   coinPill.setSize(150, 68);
   const coinLabel = scene.add
     .text(GAME_WIDTH - 90, 60, `🪙 ${getProgress().coins}`, {
-      fontFamily: 'Arial, sans-serif',
+      fontFamily: FONT_FAMILY,
       fontSize: '28px',
       fontStyle: 'bold',
       color: '#4a3728',
@@ -254,7 +290,7 @@ export function createHud(
     .setStrokeStyle(4, COLORS.ink, 0.1);
   const text = scene.add
     .text(GAME_WIDTH / 2, 60, instructions, {
-      fontFamily: 'Arial, sans-serif',
+      fontFamily: FONT_FAMILY,
       fontSize: '28px',
       fontStyle: 'bold',
       color: '#4a3728',
@@ -311,7 +347,7 @@ export function createRoundTimer(scene: Phaser.Scene, seconds: number, onExpire:
   let done = false;
   const text = scene.add
     .text(GAME_WIDTH - 70, 140, `⏱ ${remaining}`, {
-      fontFamily: 'Arial, sans-serif',
+      fontFamily: FONT_FAMILY,
       fontSize: '28px',
       fontStyle: 'bold',
       color: '#ffffff',
