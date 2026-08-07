@@ -79,6 +79,11 @@ export function hasLives(): boolean {
   return getLives().lives > 0;
 }
 
+/** Read-only peek at the current lives count (applies any owed regen first). Used by the in-level HUD to draw hearts. */
+export function peekLives(): LivesState {
+  return getLives();
+}
+
 export function msUntilNextLife(): number | null {
   const state = getLives();
   if (state.lives >= MAX_LIVES || !state.lastLifeLostAt) return null;

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { enterFullscreen, exitFullscreen } from '@/lib/fullscreen';
 
 export default function PlayPage() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -8,6 +9,12 @@ export default function PlayPage() {
   useEffect(() => {
     let game: import('phaser').Game | undefined;
     let cancelled = false;
+
+    // Covers arriving here without going through the home screen's PLAY
+    // button (deep link, browser back/forward) — the home page already
+    // requests fullscreen on tap, this is just the fallback. Not inside a
+    // user gesture here, so browsers may silently ignore it; that's fine.
+    enterFullscreen();
 
     // Phaser touches `window`/`document` at import time, so it must be loaded
     // dynamically, client-side only — never at the top of this file.
@@ -36,6 +43,7 @@ export default function PlayPage() {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleResize);
       game?.destroy(true);
+      exitFullscreen();
     };
   }, []);
 

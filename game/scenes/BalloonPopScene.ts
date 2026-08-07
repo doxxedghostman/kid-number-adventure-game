@@ -3,7 +3,7 @@ import { GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { BALLOON_TEXTURES } from '../theme';
 import { createHud, celebrate, flyCoins, randomInt, createRoundTimer, addWorldBackground, completeStoryLevel, playSfx } from './helpers';
 import { completeLevel } from '../progress';
-import { loseLife } from '../challenge';
+import { loseLife, peekLives } from '../challenge';
 import { ChallengeRunConfig } from '../levels';
 
 const ROUNDS_PER_LEVEL = 5;
@@ -27,7 +27,7 @@ export default class BalloonPopScene extends Phaser.Scene {
     this.challenge = data?.challenge;
     addWorldBackground(this, this.challenge?.worldId ?? 'grassland');
     this.round = 0;
-    this.hud = createHud(this, '', () => this.scene.start('WorldSelect'));
+    this.hud = createHud(this, '', () => this.scene.start('WorldSelect'), this.challenge ? peekLives().lives : undefined);
     this.nextRound();
   }
 
@@ -182,6 +182,7 @@ export default class BalloonPopScene extends Phaser.Scene {
     playSfx(this, 'fail');
     this.hud.setInstructions(`The answer was ${this.target}!`);
     const state = loseLife();
+    this.hud.updateLives(state.lives);
     this.time.delayedCall(1100, () => {
       if (state.lives <= 0) {
         this.scene.start('ChallengeOver', { resumeScene: 'BalloonPop', resumeData: { challenge: this.challenge } });

@@ -3,7 +3,7 @@ import { COLORS, PALETTE_CYCLE } from '../theme';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { getProgress, addCoins as persistCoins, completeLevel } from '../progress';
 import { WORLDS, getNextWorld, isWorldComplete, WorldDef } from '../worlds';
-import { advanceLevel } from '../challenge';
+import { advanceLevel, MAX_LIVES } from '../challenge';
 
 /**
  * Cover-fits a world's full-scene background art (landscape, ~960x536) into
@@ -204,7 +204,13 @@ export function flyCoins(scene: Phaser.Scene, x: number, y: number, count: numbe
  * so earning coins is visible in the moment instead of only at the Reward
  * screen after the whole level is done.
  */
-export function createHud(scene: Phaser.Scene, instructions: string, onBack: () => void) {
+export function createHud(
+  scene: Phaser.Scene,
+  instructions: string,
+  onBack: () => void,
+  /** Pass the current lives count to show a heart row (Challenge Mode only — omit outside Challenge Mode, where losing never costs a heart). */
+  initialLives?: number
+) {
   const backBtn = scene.add.circle(60, 60, 44, COLORS.white, 0.9).setInteractive({ useHandCursor: true });
   scene.add
     .text(60, 60, '←', { fontFamily: 'Arial', fontSize: '40px', color: '#4a3728' })
@@ -213,6 +219,21 @@ export function createHud(scene: Phaser.Scene, instructions: string, onBack: () 
     playSfx(scene, 'tap');
     onBack();
   });
+
+  // Heart row, under the back button — the live "how many tries do I have
+  // left" readout. Only drawn when the caller passes a lives count (i.e.
+  // Challenge Mode); Story Mode levels don't cost hearts, so there's
+  // nothing useful to show there.
+  let heartIcons: Phaser.GameObjects.Image[] = [];
+  if (initialLives !== undefined) {
+    for (let i = 0; i < MAX_LIVES; i++) {
+      const icon = scene.add
+        .image(60 + i * 44, 128, 'ui-icon-heart')
+        .setDisplaySize(36, 36)
+        .setAlpha(i < initialLives ? 1 : 0.25);
+      heartIcons.push(icon);
+    }
+  }
 
   // Coin badge, top-right — same spot flyCoins() animates coins toward.
   const coinPill = scene.add
@@ -254,6 +275,23 @@ export function createHud(scene: Phaser.Scene, instructions: string, onBack: () 
         duration: 120,
         yoyo: true,
         ease: 'Quad.Out',
+      });
+    },
+    /** Redraws the heart row to reflect the current lives count, with a little shake on the heart just lost. No-op if this HUD wasn't given a lives count to begin with. */
+    updateLives: (lives: number) => {
+      heartIcons.forEach((icon, i) => {
+        const filled = i < lives;
+        const wasFilled = icon.alpha > 0.5;
+        icon.setAlpha(filled ? 1 : 0.25);
+        if (wasFilled && !filled) {
+          scene.tweens.add({
+            targets: icon,
+            scale: 1.4,
+            duration: 140,
+            yoyo: true,
+            ease: 'Quad.Out',
+          });
+        }
       });
     },
   };
