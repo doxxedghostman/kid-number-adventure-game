@@ -12,6 +12,15 @@ const COLORS: Record<ButtonColor, string> = {
   yellow: '#ffd93d',
 };
 
+// Glossy 3D button art. Falls back to a flat CSS color for any button color
+// that doesn't have generated art yet (currently: pink, yellow).
+const BUTTON_ART: Partial<Record<ButtonColor, string>> = {
+  green: '/assets/ui/buttons/button-green.png',
+  orange: '/assets/ui/buttons/button-orange.png',
+  blue: '/assets/ui/buttons/button-blue.png',
+  purple: '/assets/ui/buttons/button-purple.png',
+};
+
 export default function Button({
   children,
   onClick,
@@ -25,11 +34,21 @@ export default function Button({
   icon?: React.ReactNode;
   variant?: ButtonVariant;
 }) {
+  const art = BUTTON_ART[color];
+  const artStyle: React.CSSProperties = art
+    ? {
+        backgroundImage: `url(${art})`,
+        backgroundSize: '100% 100%',
+        backgroundRepeat: 'no-repeat',
+        backgroundColor: 'transparent',
+      }
+    : { backgroundColor: COLORS[color] };
+
   if (variant === 'square') {
     return (
       <button
         className="square-button wiggle"
-        style={{ backgroundColor: COLORS[color] }}
+        style={artStyle}
         onClick={onClick}
         aria-label={typeof children === 'string' ? children : undefined}
       >
@@ -42,7 +61,7 @@ export default function Button({
   return (
     <button
       className="big-button wiggle"
-      style={{ backgroundColor: COLORS[color], display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem' }}
+      style={{ ...artStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem' }}
       onClick={onClick}
       aria-label={typeof children === 'string' ? children : undefined}
     >

@@ -41,9 +41,12 @@ export default function HomePage() {
           />
         </div>
 
-        <h1 className="menu-title-badge" style={{ fontSize: '2.2rem', margin: 0, color: 'white', textShadow: '0 3px 0 rgba(0,0,0,0.15)' }}>
-          Dino&apos;s Number Adventure
-        </h1>
+        {/* eslint-disable-next-line @next/next/no-img-element -- static export + unoptimized images, plain <img> is fine here */}
+        <img
+          src="/assets/ui/logo.png"
+          alt="Kids Number Adventure"
+          style={{ width: 'min(300px, 78vw)', height: 'auto' }}
+        />
 
         <div
           style={{
@@ -54,16 +57,24 @@ export default function HomePage() {
             width: 'min(340px, 80vw)',
           }}
         >
-          <Button variant="square" color="green" icon="▶️" onClick={() => router.push('/play')}>
+          <Button
+            variant="square"
+            color="orange"
+            icon={
+              // eslint-disable-next-line @next/next/no-img-element -- static export + unoptimized images
+              <img src="/assets/ui/icons/icon-play.png" alt="" style={{ height: '2.2rem', width: 'auto' }} />
+            }
+            onClick={() => router.push('/play')}
+          >
             PLAY
           </Button>
-          <Button variant="square" color="orange" icon="🎁" onClick={() => router.push('/play?daily=1')}>
+          <Button variant="square" color="purple" icon="🎁" onClick={() => router.push('/play?daily=1')}>
             Daily Reward
           </Button>
-          <Button variant="square" color="purple" icon="🏆" onClick={() => router.push('/achievements')}>
+          <Button variant="square" color="green" icon="🏆" onClick={() => router.push('/achievements')}>
             Achievements
           </Button>
-          <Button variant="square" color="pink" icon="⚙️" onClick={() => router.push('/settings')}>
+          <Button variant="square" color="blue" icon="⚙️" onClick={() => router.push('/settings')}>
             Settings
           </Button>
         </div>

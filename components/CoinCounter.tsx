@@ -32,7 +32,8 @@ export default function CoinCounter() {
         color: '#4a3728',
       }}
     >
-      <span role="img" aria-label="coin">🪙</span>
+      {/* eslint-disable-next-line @next/next/no-img-element -- static export + unoptimized images, plain <img> is fine here */}
+      <img src="/assets/ui/icons/icon-coin.png" alt="coins" style={{ height: 24, width: 'auto' }} />
       {coins ?? '—'}
     </div>
   );
