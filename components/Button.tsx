@@ -45,6 +45,28 @@ export default function Button({
     : { backgroundColor: COLORS[color] };
 
   if (variant === 'square') {
+    // Button art is a wide pill shape, not a square — stretching it to fill a
+    // square cell distorts it. When art exists, render a fixed-height pill
+    // (background 'contain', never stretched) instead of the square cell;
+    // falls back to the original square treatment for colors with no art yet.
+    if (art) {
+      return (
+        <button
+          className="square-button-pill wiggle"
+          style={{
+            backgroundImage: `url(${art})`,
+            backgroundSize: 'contain',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+          onClick={onClick}
+          aria-label={typeof children === 'string' ? children : undefined}
+        >
+          <span className="square-button-pill-icon">{icon}</span>
+          <span className="square-button-pill-label">{children}</span>
+        </button>
+      );
+    }
     return (
       <button
         className="square-button wiggle"

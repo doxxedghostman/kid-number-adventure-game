@@ -79,6 +79,39 @@ button {
   box-shadow: 0 0 0 rgba(0, 0, 0, 0.15);
 }
 
+.square-button-pill {
+  width: 100%;
+  height: clamp(64px, 9vh, 92px);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  background-color: transparent;
+  padding: 0 0.6rem;
+  transition: transform 0.08s ease;
+  color: white;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+}
+
+.square-button-pill:active {
+  transform: translateY(4px);
+}
+
+.square-button-pill-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.square-button-pill-label {
+  font-size: 1rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .square-button-icon {
   font-size: 2.4rem;
   line-height: 1;
