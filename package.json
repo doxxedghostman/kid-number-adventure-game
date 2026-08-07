@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "cap:sync": "next build && next export && npx cap sync android",
+    "cap:assets": "npx @capacitor/assets generate --android",
     "cap:open": "npx cap open android"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@capacitor/android": "^6.1.0",
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^6.1.0",
     "@capacitor/core": "^6.1.0",
     "@capacitor/status-bar": "^6.0.1",
