@@ -18,8 +18,23 @@ export default function PlayPage() {
       game = new Phaser.Game(createGameConfig(containerRef.current));
     })();
 
+    // Mobile browsers resize the visual viewport (address bar hiding/
+    // showing on scroll, keyboard opening, orientation change) without
+    // firing a full page reload. If Phaser's Scale Manager doesn't get
+    // told to recompute, its internal pointer-to-canvas coordinate
+    // mapping can go stale relative to where the canvas is actually
+    // drawn on screen — taps then land a few dozen pixels off from where
+    // they visually appear, which reads as "the wrong tile responded".
+    // Forcing a refresh on every resize/orientation event keeps input
+    // mapping in sync with the real, current canvas position and size.
+    const handleResize = () => game?.scale.refresh();
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+
     return () => {
       cancelled = true;
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
       game?.destroy(true);
     };
   }, []);

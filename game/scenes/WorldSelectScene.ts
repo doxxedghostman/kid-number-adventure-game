@@ -120,25 +120,40 @@ export default class WorldSelectScene extends Phaser.Scene {
     const completed = isWorldComplete(world, myProgress);
 
     const container = this.add.container(x, y);
-    const { shadow, body } = drawTileBody(this, container, w, h, unlocked ? COLORS.white : 0xd8d8d8);
+    const { shadow, body } = drawTileBody(this, container, w, h, unlocked ? COLORS.white : 0xeef0f2);
 
-    const art = this.add.image(0, -30, world.tileKey).setOrigin(0.5);
-    art.setScale((w - 40) / art.width);
+    // Every tile gets the same fixed-height footer strip for its name —
+    // solid background, never covered by artwork, so it stays readable no
+    // matter how busy or dark that world's art is. The art region above it
+    // is capped to both the available width AND height so it can never
+    // grow tall enough to bleed down into the footer text.
+    const footerH = 84;
+    const artTop = -h / 2 + 14;
+    const artBottom = h / 2 - footerH;
+    const artMaxW = w - 32;
+    const artMaxH = artBottom - artTop;
+
+    const art = this.add.image(0, (artTop + artBottom) / 2, world.tileKey).setOrigin(0.5);
+    art.setScale(Math.min(artMaxW / art.width, artMaxH / art.height));
     if (!unlocked) {
-      art.setTint(0x888888);
-      art.setAlpha(0.6);
+      art.setTint(0x9aa0a6);
+      art.setAlpha(0.55);
     }
 
+    const footer = this.add
+      .rectangle(0, h / 2 - footerH / 2, w - 16, footerH - 12, unlocked ? 0xffffff : 0xf1f1f1, 1)
+      .setStrokeStyle(2, COLORS.ink, 0.06);
+
     const label = this.add
-      .text(0, h / 2 - 56, world.label, {
+      .text(0, h / 2 - footerH + 24, world.label, {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '26px',
+        fontSize: '24px',
         fontStyle: 'bold',
-        color: unlocked ? '#4a3728' : '#8a8a8a',
+        color: unlocked ? '#4a3728' : '#9a9a9a',
       })
       .setOrigin(0.5);
 
-    container.add([art, label]);
+    container.add([art, footer, label]);
 
     if (unlocked) {
       const badgeText = completed ? '⭐' : '▶️';
@@ -146,9 +161,9 @@ export default class WorldSelectScene extends Phaser.Scene {
       container.add(badge);
 
       const progressLabel = this.add
-        .text(0, h / 2 - 24, `${Math.min(myProgress.levelIndex, world.levelCount)}/${world.levelCount}`, {
+        .text(0, h / 2 - footerH + 56, `${Math.min(myProgress.levelIndex, world.levelCount)}/${world.levelCount}`, {
           fontFamily: 'Arial, sans-serif',
-          fontSize: '18px',
+          fontSize: '17px',
           color: '#8a8a8a',
         })
         .setOrigin(0.5);
@@ -157,10 +172,10 @@ export default class WorldSelectScene extends Phaser.Scene {
       const lockBadge = this.add.circle(w / 2 - 32, -h / 2 + 32, 26, 0xffffff, 0.9);
       const lock = this.add.text(w / 2 - 32, -h / 2 + 32, '🔒', { fontSize: '24px' }).setOrigin(0.5);
       const subtitle = this.add
-        .text(0, h / 2 - 24, `Finish ${prev?.label ?? 'previous world'}'s Story`, {
+        .text(0, h / 2 - footerH + 56, `Finish ${prev?.label ?? 'previous world'}'s Story`, {
           fontFamily: 'Arial, sans-serif',
-          fontSize: '17px',
-          color: '#8a8a8a',
+          fontSize: '15px',
+          color: '#9a9a9a',
         })
         .setOrigin(0.5);
       container.add([lockBadge, lock, subtitle]);
@@ -171,10 +186,18 @@ export default class WorldSelectScene extends Phaser.Scene {
 
     container.on('pointerover', () => this.tweens.add({ targets: container, scale: 1.03, duration: 100 }));
     container.on('pointerout', () => this.tweens.add({ targets: container, scale: 1, duration: 100 }));
+
+    // Visual "pressed" feedback fires immediately on touch-down (feels
+    // responsive), but the actual navigation only fires on 'pointerup' —
+    // and Phaser only emits 'pointerup' on a game object if the pointer is
+    // still over that SAME object when it's released. That's the standard,
+    // mobile-safe tap pattern: it guarantees a tap can never be attributed
+    // to a different tile than the one the finger actually lifted off of.
     container.on('pointerdown', () => {
       this.tweens.add({ targets: body, y: 6, duration: 70, yoyo: true });
       shadow.setAlpha(0.5);
-
+    });
+    container.on('pointerup', () => {
       if (!unlocked) {
         this.tweens.add({ targets: container, x: '+=8', duration: 60, yoyo: true, repeat: 2 });
         this.showToast(`🔒 Finish ${prev?.label ?? 'the previous world'}'s Story to unlock ${world.label}!`);
