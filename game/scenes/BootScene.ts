@@ -34,6 +34,13 @@ export default class BootScene extends Phaser.Scene {
     // 6 balloon colors + 1 extra (red), see theme.ts BALLOON_TEXTURES.
     const balloonColors = ['red', 'yellow', 'blue', 'green', 'pink', 'purple', 'orange'];
     balloonColors.forEach((c) => this.load.image(`balloon-${c}`, `assets/balloons/balloon-${c}.png`));
+
+    // Glossy 3D UI icons — used for status badges and nav buttons across scenes.
+    this.load.image('ui-icon-star', 'assets/ui/icons/icon-star.png');
+    this.load.image('ui-icon-play', 'assets/ui/icons/icon-play.png');
+    this.load.image('ui-icon-back', 'assets/ui/icons/icon-back.png');
+    this.load.image('ui-icon-coin', 'assets/ui/icons/icon-coin.png');
+    this.load.image('ui-icon-heart', 'assets/ui/icons/icon-heart.png');
   }
 
   create() {

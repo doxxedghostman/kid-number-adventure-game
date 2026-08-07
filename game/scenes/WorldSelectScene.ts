@@ -79,7 +79,8 @@ export default class WorldSelectScene extends Phaser.Scene {
     // Exit to the Next.js home menu — this is now the outermost Phaser screen.
     this.add.circle(60, 64, 44, 0x000000, 0.18);
     const backBtn = this.add.circle(60, 60, 44, 0xffffff, 0.95).setInteractive({ useHandCursor: true });
-    this.add.text(60, 60, '🏠', { fontSize: '36px' }).setOrigin(0.5);
+    const backIcon = this.add.image(60, 60, 'ui-icon-back').setOrigin(0.5);
+    backIcon.setScale(Math.min(56 / backIcon.width, 56 / backIcon.height));
     backBtn.on('pointerdown', () => {
       this.tweens.add({
         targets: backBtn,
@@ -156,8 +157,9 @@ export default class WorldSelectScene extends Phaser.Scene {
     container.add([art, footer, label]);
 
     if (unlocked) {
-      const badgeText = completed ? '⭐' : '▶️';
-      const badge = this.add.text(w / 2 - 26, -h / 2 + 20, badgeText, { fontSize: '26px' }).setOrigin(0.5);
+      const badgeKey = completed ? 'ui-icon-star' : 'ui-icon-play';
+      const badge = this.add.image(w / 2 - 26, -h / 2 + 20, badgeKey).setOrigin(0.5);
+      badge.setScale(Math.min(40 / badge.width, 40 / badge.height));
       container.add(badge);
 
       const progressLabel = this.add
