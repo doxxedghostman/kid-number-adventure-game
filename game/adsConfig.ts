@@ -11,7 +11,7 @@
  * "Test device" in the AdMob console (Settings → Test devices) so ads on
  * your own phone during final checks still don't count as real traffic.
  */
-export const USE_TEST_ADS = true;
+export const USE_TEST_ADS = false;
 
 // Google's official sample ad unit IDs (same for every AdMob account) —
 // https://developers.google.com/admob/android/test-ads
