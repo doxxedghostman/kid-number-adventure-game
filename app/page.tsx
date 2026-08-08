@@ -61,9 +61,9 @@ export default function HomePage() {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '1rem',
+            gap: '0.7rem',
             marginTop: '0.6rem',
-            width: 'min(340px, 80vw)',
+            width: 'min(360px, 88vw)',
           }}
         >
           <Button

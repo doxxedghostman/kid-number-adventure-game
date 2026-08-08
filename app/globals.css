@@ -86,13 +86,14 @@ button {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: clamp(0.2rem, 1.4vw, 0.5rem);
   border: none;
   background-color: transparent;
-  padding: 0 0.6rem;
+  padding: 0 0.4rem;
   transition: transform 0.08s ease;
   color: white;
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+  overflow: hidden;
 }
 
 .square-button-pill:active {
@@ -100,16 +101,21 @@ button {
 }
 
 .square-button-pill-icon {
-  font-size: 1.5rem;
+  flex-shrink: 0;
+  font-size: clamp(0.95rem, 4.2vw, 1.5rem);
   line-height: 1;
   display: flex;
   align-items: center;
 }
 
 .square-button-pill-label {
-  font-size: 1rem;
+  min-width: 0;
+  font-size: clamp(0.6rem, 2.9vw, 1rem);
   font-weight: 600;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
 }
 
 .square-button-icon {
