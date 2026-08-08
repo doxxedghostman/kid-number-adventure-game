@@ -4,6 +4,8 @@ import { GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { getProgress, addCoins as persistCoins, completeLevel } from '../progress';
 import { WORLDS, getNextWorld, isWorldComplete, WorldDef } from '../worlds';
 import { advanceLevel, MAX_LIVES } from '../challenge';
+import { recordLevelCompletedForAds } from '../adsCadence';
+import { showInterstitial } from '../../lib/admob';
 
 /**
  * Cover-fits a world's full-scene background art (landscape, ~960x536) into
@@ -38,6 +40,13 @@ export function addWorldBackground(scene: Phaser.Scene, worldId: string, dim = t
 export function completeStoryLevel(worldId: string, levelId: string, starsEarned: number): WorldDef | null {
   completeLevel(levelId, 0, starsEarned);
   const state = advanceLevel(worldId);
+
+  // Fire-and-forget: never block the level → Reward transition on an ad
+  // network round trip. No-ops entirely on plain web (see lib/admob.ts).
+  if (recordLevelCompletedForAds()) {
+    showInterstitial();
+  }
+
   const world = WORLDS.find((w) => w.id === worldId);
   if (world && isWorldComplete(world, state)) {
     return getNextWorld(worldId);

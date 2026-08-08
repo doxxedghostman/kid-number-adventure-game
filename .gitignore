@@ -5,8 +5,10 @@
 /.next/
 /out/
 
-# capacitor native projects (generated, not hand-edited — regenerate with `npx cap add android`)
-/android/
+# capacitor native projects — android/ IS committed (it holds hand-edited
+# native config like the AdMob AndroidManifest entry); its own
+# android/.gitignore already excludes build output, .gradle, local.properties,
+# copied web assets, etc. ios/ stays ignored until it actually exists.
 /ios/
 
 # misc

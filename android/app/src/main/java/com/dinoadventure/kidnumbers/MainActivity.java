@@ -1,0 +1,5 @@
+package com.dinoadventure.kidnumbers;
+
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {}

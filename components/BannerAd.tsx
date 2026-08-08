@@ -1,12 +1,35 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { showHomeBanner, hideHomeBanner } from '@/lib/admob';
+
 /**
- * Placeholder for the AdMob banner strip. Real AdMob only works inside the
- * Capacitor-wrapped native app (not plain web), via @capacitor-community/admob.
- * That plugin is intentionally NOT wired up yet — see README "Ads" section
- * for why, and do this last, after the game itself works and is fun.
+ * On the Capacitor Android app, the real AdMob banner is a native Android
+ * view that AdMob draws itself, positioned by the plugin — it doesn't
+ * render into this component's DOM at all, so once it's showing this
+ * component renders nothing (leaving the bottom strip clear for it).
+ * On plain web, the native SDK doesn't exist, so it falls back to the
+ * placeholder strip below instead of showing nothing.
  */
 export default function BannerAd() {
+  const [nativeBannerActive, setNativeBannerActive] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { Capacitor } = await import('@capacitor/core');
+      if (cancelled || !Capacitor.isNativePlatform()) return;
+      await showHomeBanner();
+      if (!cancelled) setNativeBannerActive(true);
+    })();
+    return () => {
+      cancelled = true;
+      hideHomeBanner();
+    };
+  }, []);
+
+  if (nativeBannerActive) return null;
+
   return (
     <div
       style={{

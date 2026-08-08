@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Kid Number Adventure</string>
+    <string name="title_activity_main">Kid Number Adventure</string>
+    <string name="package_name">com.dinoadventure.kidnumbers</string>
+    <string name="custom_url_scheme">com.dinoadventure.kidnumbers</string>
+    <string name="admob_app_id">ca-app-pub-2830006716687955~7533068710</string>
+</resources>
